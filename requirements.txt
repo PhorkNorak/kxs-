@@ -1,7 +1,6 @@
 # Core
 torch>=2.0.0
 transformers>=4.36.0
-tokenizers>=0.15.0
 datasets>=2.14.0
 
 # Classical ML
@@ -16,23 +15,14 @@ sentence-transformers>=2.2.0
 coral-pytorch>=1.4.0
 
 # XAI
-shap>=0.43.0
 captum>=0.7.0
-
-# LLM APIs
-openai>=1.0.0
-anthropic>=0.18.0
-google-generativeai>=0.3.0
 
 # Khmer NLP
 khmernltk>=1.6
 
-# Data & visualization
+# Data & viz
 pandas>=2.0.0
 numpy>=1.24.0
 matplotlib>=3.7.0
-seaborn>=0.12.0
+Pillow>=10.0.0
 tqdm>=4.65.0
-
-# Utilities
-jsonlines>=4.0.0
