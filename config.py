@@ -40,7 +40,7 @@ INPUT_FORMATS = [INPUT_AR, INPUT_QAR]
 TRANSFORMER_BACKBONES = {
     "mbert":      "bert-base-multilingual-cased",
     "xlmr":       "xlm-roberta-base",
-    "prahokbart": "KIST-AIP/PrahokBART",
+    "mdeberta":   "microsoft/mdeberta-v3-base",
     "gte":        "Alibaba-NLP/gte-multilingual-base",
 }
 PROPOSED_BACKBONE = "xlmr"   # KX-CL headline model
