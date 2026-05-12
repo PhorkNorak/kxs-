@@ -21,8 +21,8 @@ class DualEncoder(nn.Module):
         super().__init__()
         self.loss_type = loss_type
         self.num_classes = num_classes
-        config = AutoConfig.from_pretrained(model_name)
-        self.encoder = AutoModel.from_pretrained(model_name, config=config)
+        config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+        self.encoder = AutoModel.from_pretrained(model_name, config=config, trust_remote_code=True)
         self.hidden_dim = config.hidden_size
         if freeze_layers > 0:
             self._freeze(freeze_layers)
@@ -98,8 +98,8 @@ class CrossEncoder(nn.Module):
         super().__init__()
         self.loss_type = loss_type
         self.num_classes = num_classes
-        config = AutoConfig.from_pretrained(model_name)
-        self.encoder = AutoModel.from_pretrained(model_name, config=config)
+        config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+        self.encoder = AutoModel.from_pretrained(model_name, config=config, trust_remote_code=True)
         self.hidden_dim = config.hidden_size
         out = (num_classes - 1) if loss_type == "corn" else 1
         self.head = nn.Sequential(

@@ -224,7 +224,7 @@ def stage_transformers(only_backbones=None):
     backbones = {k: v for k, v in TRANSFORMER_BACKBONES.items()
                  if only_backbones is None or k in only_backbones}
     for bname, bpath in backbones.items():
-        tokenizer = AutoTokenizer.from_pretrained(bpath)
+        tokenizer = AutoTokenizer.from_pretrained(bpath, trust_remote_code=True)
         for fmt in INPUT_FORMATS:
             for seed in TRAIN_CFG.seeds:
                 run = f"{bname}_dual_{fmt}_s{seed}"

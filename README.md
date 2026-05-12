@@ -6,7 +6,7 @@
 
 - **KX-CL**: XLM-R dual-encoder + 4-way interaction `[e_A; e_R; e_A-e_R; e_A⊙e_R]` + CORN ordinal regression + Score-Aware Contrastive Learning
 - **Baselines**: Mean predictor, TF-IDF+Cosine, TF-IDF+SVR, FastText+Cosine, BiLSTM+Attention
-- **Backbone study**: mBERT, XLM-R (proposed), mDeBERTa-v3, GTE — all dual-encoder + SCL
+- **Backbone study**: mBERT, XLM-R (proposed), GTE — all dual-encoder + SCL
 - **Ablations**: input format, preprocessing, topology, SCL weight, loss type, imbalance handling
 - **XAI**: Gradient saliency + ERASER faithfulness (comprehensiveness/sufficiency)
 - **Evaluation**: QWK (primary), bootstrap 95% CIs, paired bootstrap significance, MC Dropout uncertainty, selective prediction
@@ -91,7 +91,7 @@ kxs/
 |-------|--------|------|------------|
 | Baselines | Mean, TF-IDF×2, FastText | 8 | 10 min |
 | BiLSTM | BiLSTM+Attention | 2 | 10 min |
-| Backbones | mBERT, XLM-R, mDeBERTa-v3, GTE | 8 | 3 hours |
+| Backbones | mBERT, XLM-R, GTE | 6 | 2 hours |
 | Ablations | preproc, topology, SCL, loss, imbalance | 15 | 2 hours |
 | XAI | Gradient saliency + faithfulness | 1 | 30 min |
 | **Total** | | **~34** | **~6 hours** |
@@ -122,7 +122,7 @@ kxs/
   baseline (TF-IDF + SVR) uses inverse-frequency sample weights for label balance.
 - **Per-backbone tokenization differs** by design — each transformer uses its own
   native tokenizer (WordPiece for mBERT, SentencePiece-BPE for XLM-R / GTE,
-  SentencePiece-BPE for mDeBERTa-v3). Tokenization is part of each pretrained model.
+  SentencePiece-BPE for GTE). Tokenization is part of each pretrained model.
 - **Sequence truncation.** Even at `max_seq_len=256`, ~25% of student answers exceed
   the model window (75th percentile of answer length is 383 characters). BiLSTM and
   all transformers operate on the truncated prefix.
