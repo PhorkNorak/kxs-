@@ -1,0 +1,287 @@
+{
+  "ranked": [
+    {
+      "model": "loss_weighted_mse",
+      "qwk": 0.7686,
+      "qwk_std": 0.0,
+      "rmse": 0.1847,
+      "pearson": 0.7791,
+      "f1_w": 0.6688,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "scl_beta_1.0",
+      "qwk": 0.7675,
+      "qwk_std": 0.0,
+      "rmse": 0.1879,
+      "pearson": 0.7764,
+      "f1_w": 0.6939,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "tfidf_svr_qar",
+      "qwk": 0.7672,
+      "qwk_std": 0.0,
+      "rmse": 0.1659,
+      "pearson": 0.8282,
+      "f1_w": 0.6918,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "scl_beta_0.25",
+      "qwk": 0.7617,
+      "qwk_std": 0.0,
+      "rmse": 0.1906,
+      "pearson": 0.7619,
+      "f1_w": 0.6991,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "tfidf_svr_ar",
+      "qwk": 0.7593,
+      "qwk_std": 0.0,
+      "rmse": 0.1683,
+      "pearson": 0.8244,
+      "f1_w": 0.68,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "topology_cross",
+      "qwk": 0.7591,
+      "qwk_std": 0.0,
+      "rmse": 0.1887,
+      "pearson": 0.7693,
+      "f1_w": 0.6959,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "preproc_kcc_seg",
+      "qwk": 0.7544,
+      "qwk_std": 0.0,
+      "rmse": 0.1939,
+      "pearson": 0.7636,
+      "f1_w": 0.69,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "imbalance_balanced",
+      "qwk": 0.7479,
+      "qwk_std": 0.0,
+      "rmse": 0.1974,
+      "pearson": 0.7531,
+      "f1_w": 0.672,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "loss_mse",
+      "qwk": 0.7461,
+      "qwk_std": 0.0,
+      "rmse": 0.1765,
+      "pearson": 0.8012,
+      "f1_w": 0.6346,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "loss_corn",
+      "qwk": 0.745,
+      "qwk_std": 0.0,
+      "rmse": 0.199,
+      "pearson": 0.7539,
+      "f1_w": 0.6597,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "preproc_kcc",
+      "qwk": 0.7445,
+      "qwk_std": 0.0,
+      "rmse": 0.1916,
+      "pearson": 0.7601,
+      "f1_w": 0.676,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "preproc_kcc_seg_punct",
+      "qwk": 0.7411,
+      "qwk_std": 0.0,
+      "rmse": 0.1954,
+      "pearson": 0.7507,
+      "f1_w": 0.69,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "scl_beta_0.5",
+      "qwk": 0.7358,
+      "qwk_std": 0.0,
+      "rmse": 0.1992,
+      "pearson": 0.7433,
+      "f1_w": 0.6741,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "preproc_raw",
+      "qwk": 0.7187,
+      "qwk_std": 0.0,
+      "rmse": 0.2084,
+      "pearson": 0.7254,
+      "f1_w": 0.6603,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "scl_beta_0.0",
+      "qwk": 0.7108,
+      "qwk_std": 0.0,
+      "rmse": 0.21,
+      "pearson": 0.722,
+      "f1_w": 0.6912,
+      "pass": true,
+      "n_seeds": 1
+    },
+    {
+      "model": "topology_dual",
+      "qwk": 0.6977,
+      "qwk_std": 0.0,
+      "rmse": 0.2098,
+      "pearson": 0.7079,
+      "f1_w": 0.6855,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "imbalance_standard",
+      "qwk": 0.6879,
+      "qwk_std": 0.0,
+      "rmse": 0.2039,
+      "pearson": 0.7022,
+      "f1_w": 0.5859,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "mbert_dual_qar",
+      "qwk": 0.682,
+      "qwk_std": 0.0205,
+      "rmse": 0.223,
+      "rmse_std": 0.002,
+      "pearson": 0.6954,
+      "f1_w": 0.6277,
+      "pass": false,
+      "n_seeds": 3
+    },
+    {
+      "model": "mbert_dual_ar",
+      "qwk": 0.6551,
+      "qwk_std": 0.0142,
+      "rmse": 0.227,
+      "rmse_std": 0.006,
+      "pearson": 0.6815,
+      "f1_w": 0.6174,
+      "pass": false,
+      "n_seeds": 3
+    },
+    {
+      "model": "bilstm_qar",
+      "qwk": 0.6277,
+      "qwk_std": 0.0,
+      "rmse": 0.2453,
+      "pearson": 0.613,
+      "f1_w": 0.6264,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "bilstm_ar",
+      "qwk": 0.5803,
+      "qwk_std": 0.0,
+      "rmse": 0.2418,
+      "pearson": 0.5889,
+      "f1_w": 0.5223,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "tfidf_cosine_ar",
+      "qwk": 0.468,
+      "qwk_std": 0.0,
+      "rmse": 0.2994,
+      "pearson": 0.5195,
+      "f1_w": 0.4106,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "tfidf_cosine_qar",
+      "qwk": 0.4227,
+      "qwk_std": 0.0,
+      "rmse": 0.289,
+      "pearson": 0.5021,
+      "f1_w": 0.3539,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "fasttext_cosine_ar",
+      "qwk": 0.0074,
+      "qwk_std": 0.0,
+      "rmse": 0.3874,
+      "pearson": 0.2539,
+      "f1_w": 0.2518,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "fasttext_cosine_qar",
+      "qwk": 0.0074,
+      "qwk_std": 0.0,
+      "rmse": 0.3883,
+      "pearson": 0.1911,
+      "f1_w": 0.2518,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "mean_predictor_ar",
+      "qwk": 0.0,
+      "qwk_std": 0.0,
+      "rmse": 0.2841,
+      "pearson": 0.0,
+      "f1_w": 0.0456,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "mean_predictor_qar",
+      "qwk": 0.0,
+      "qwk_std": 0.0,
+      "rmse": 0.2841,
+      "pearson": 0.0,
+      "f1_w": 0.0456,
+      "pass": false,
+      "n_seeds": 1
+    },
+    {
+      "model": "mdeberta_dual_ar",
+      "qwk": 0.0,
+      "qwk_std": 0.0,
+      "rmse": 0.7703,
+      "rmse_std": 0.0,
+      "pearson": 0.0,
+      "f1_w": 0.0002,
+      "pass": false,
+      "n_seeds": 3
+    }
+  ]
+}
