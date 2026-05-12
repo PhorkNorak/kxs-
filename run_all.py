@@ -6,6 +6,7 @@ Usage:
     python run_all.py --stage baselines
     python run_all.py --stage bilstm
     python run_all.py --stage transformers
+    python run_all.py --stage transformers --backbones mdeberta gte
     python run_all.py --stage ablations
     python run_all.py --stage xai
     python run_all.py --stage summary
@@ -45,6 +46,14 @@ def save_results(results, filename):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, default=_c, ensure_ascii=False)
     print(f"  → Saved: {path}")
+
+
+def load_results(filename):
+    path = os.path.join(RESULTS_DIR, filename)
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def load_splits(mode="kcc"):
@@ -208,15 +217,20 @@ def stage_bilstm():
 
 
 # ── STAGE 4: Transformers ───────────────────────────────────
-def stage_transformers():
+def stage_transformers(only_backbones=None):
     print("\n" + "=" * 60 + "\nSTAGE 4: Transformer Backbone Study\n" + "=" * 60)
     tr, va, te = load_splits("kcc")
-    results = {}
-    for bname, bpath in TRANSFORMER_BACKBONES.items():
+    results = load_results("transformers.json")  # resume if partial file exists
+    backbones = {k: v for k, v in TRANSFORMER_BACKBONES.items()
+                 if only_backbones is None or k in only_backbones}
+    for bname, bpath in backbones.items():
         tokenizer = AutoTokenizer.from_pretrained(bpath)
         for fmt in INPUT_FORMATS:
             for seed in TRAIN_CFG.seeds:
                 run = f"{bname}_dual_{fmt}_s{seed}"
+                if run in results:
+                    print(f"\n  ── {run} [skipped, already done] ──")
+                    continue
                 print(f"\n  ── {run} ──")
                 set_seed(seed)
                 trl, vl, tel = get_dataloaders(tr, va, te, tokenizer,
@@ -237,6 +251,7 @@ def stage_transformers():
                 m["selective_prediction"] = selective_prediction_analysis(mc_tl, mc_pl, unc)
                 results[run] = m
                 print(format_results(m, run))
+                save_results(results, "transformers.json")
                 free(model)
     save_results(results, "transformers.json")
 
@@ -445,14 +460,16 @@ def main():
     parser.add_argument("--stage", default="all",
         choices=["prepare", "baselines", "bilstm", "transformers",
                  "ablations", "xai", "summary", "all"])
+    parser.add_argument("--backbones", nargs="+", default=None,
+        help="Subset of backbones to run in --stage transformers (e.g. --backbones mdeberta gte)")
     args = parser.parse_args()
 
     print(f"\nDevice: {DEVICE}  |  Backbone: {PROPOSED_BACKBONE}  |  Seeds: {TRAIN_CFG.seeds}")
 
     order = ["prepare", "baselines", "bilstm", "transformers", "ablations", "xai", "summary"]
     fns = {"prepare": stage_prepare, "baselines": stage_baselines, "bilstm": stage_bilstm,
-           "transformers": stage_transformers, "ablations": stage_ablations,
-           "xai": stage_xai, "summary": stage_summary}
+           "transformers": lambda: stage_transformers(args.backbones),
+           "ablations": stage_ablations, "xai": stage_xai, "summary": stage_summary}
 
     if args.stage == "all":
         for s in order:
