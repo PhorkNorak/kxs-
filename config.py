@@ -69,8 +69,15 @@ class TrainConfig:
     use_class_balanced: bool = True
     # Loss: "mse", "weighted_mse", "corn"
     loss_type: str = "corn"
+    # Class-imbalance: inverse-frequency weighting inside CORN sub-tasks
+    corn_class_weighted: bool = True
+    # Label smoothing for CORN binary targets (0.0 = off)
+    corn_epsilon: float = 0.05
 
 TRAIN_CFG = TrainConfig()
+
+# Post-training QWK threshold calibration (val-set optimised bin boundaries)
+CALIBRATE_THRESHOLDS: bool = True
 
 # ── BiLSTM-specific config ───────────────────────────────────
 @dataclass

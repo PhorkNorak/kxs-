@@ -16,7 +16,19 @@
       "Bash(python -c \"import sys; exec\\(\\\\\"import re\\\\nsys.stdout.write\\(sys.stdin.read\\(\\)\\)\\\\\"\\)\")",
       "WebFetch(domain:arxiv.org)",
       "WebFetch(domain:educationaldatamining.org)",
-      "WebFetch(domain:link.springer.com)"
+      "WebFetch(domain:link.springer.com)",
+      "Bash(ls \"C:\\\\Users\\\\Admin\\\\.claude\\\\projects\\\\d--cloud-Documents-work-R-I-khmer-kxs\\\\memory\\\\\" 2>&1 || echo \"empty/none\")",
+      "Read(//c/Users/Admin/.claude/projects/d--cloud-Documents-work-R-I-khmer-kxs/memory\" 2>&1 || echo empty/**)",
+      "Bash(ls -la /c/Users/Admin/.claude/projects/d--cloud-Documents-work-R-I-khmer-kxs/memory/ 2>&1)",
+      "Read(//c/Users/Admin/.claude/projects/d--cloud-Documents-work-R-I-khmer-kxs/memory//**)",
+      "Bash(python -m pytest tests/test_losses.py -v)",
+      "Bash(python -m pytest tests/test_calibration.py -v)",
+      "Bash(python -c \"from config import TRAIN_CFG, CALIBRATE_THRESHOLDS; print\\(TRAIN_CFG.corn_epsilon, TRAIN_CFG.corn_class_weighted, CALIBRATE_THRESHOLDS\\)\")",
+      "Bash(python -c \"import train; print\\('train.py OK'\\)\")",
+      "Bash(python -c \"import run_all; print\\('run_all.py OK'\\)\")",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/home/norak/R&I/kxs-/results/xai.json'\\)\\); print\\(list\\(d.keys\\(\\)\\)[:10]\\); print\\(type\\(d.get\\('ig_attributions', [None]\\)[0]\\) if d.get\\('ig_attributions'\\) else 'no ig_attr'\\)\")",
+      "Bash(python -c \"import json; d=json.load\\(open\\('d:/cloud/Documents/work/R&I/khmer/kxs/results/xai.json'\\)\\); print\\(list\\(d.keys\\(\\)\\)[:10]\\)\")"
     ]
   }
 }

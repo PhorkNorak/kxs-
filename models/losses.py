@@ -14,19 +14,43 @@ import numpy as np
 
 
 class CORNLoss(nn.Module):
-    """Conditional Ordinal Regression for Neural Networks."""
-    def __init__(self, num_classes=5):
+    """Conditional Ordinal Regression for Neural Networks.
+
+    Args:
+        num_classes: number of ordinal score bins (default 5).
+        epsilon: label-smoothing factor in [0, 1). 0.0 = no smoothing.
+    """
+    def __init__(self, num_classes=5, epsilon=0.0):
         super().__init__()
         self.K = num_classes
+        self.epsilon = epsilon
 
-    def forward(self, logits, labels):
+    def forward(self, logits, labels, class_weights=None):
+        """
+        Args:
+            logits:        [B, K-1] raw threshold logits
+            labels:        [B] integer class labels in [0, K-1]
+            class_weights: optional [K] inverse-frequency tensor; upweights
+                           minority classes by weighting each sample by its
+                           class's inverse frequency.
+        """
         losses = []
         for k in range(self.K - 1):
             mask = labels >= k
             if mask.sum() == 0:
                 continue
             bl = (labels[mask] > k).float()
-            losses.append(F.binary_cross_entropy_with_logits(logits[mask, k], bl))
+            if self.epsilon > 0:
+                bl = bl * (1.0 - self.epsilon) + (1.0 - bl) * self.epsilon
+            if class_weights is not None:
+                w = class_weights.to(logits.device)[labels[mask]]
+                losses.append(
+                    F.binary_cross_entropy_with_logits(logits[mask, k], bl, weight=w)
+                )
+            else:
+                losses.append(
+                    F.binary_cross_entropy_with_logits(logits[mask, k], bl)
+                )
         if not losses:
             return torch.tensor(0.0, device=logits.device, requires_grad=True)
         return torch.stack(losses).mean()
@@ -81,19 +105,23 @@ class WeightedMSELoss(nn.Module):
 
 
 class KXCLLoss(nn.Module):
-    """Joint: L = α·L_CORN + β·L_SCL"""
+    """Joint: L = α·L_CORN + β·L_SCL
+
+    Args:
+        epsilon: label-smoothing forwarded to CORNLoss (0.0 = off).
+    """
     def __init__(self, num_classes=5, alpha=1.0, beta=0.5,
-                 temperature=0.07, margin_scale=1.0):
+                 temperature=0.07, margin_scale=1.0, epsilon=0.0):
         super().__init__()
         self.alpha = alpha
         self.beta = beta
-        self.corn = CORNLoss(num_classes)
+        self.corn = CORNLoss(num_classes, epsilon=epsilon)
         self.scl = ScoreAwareContrastiveLoss(temperature, margin_scale=margin_scale)
 
-    def forward(self, logits, labels, embeddings, scores):
-        l_corn = self.corn(logits, labels)
-        l_scl = self.scl(embeddings, scores)
-        total = self.alpha * l_corn + self.beta * l_scl
+    def forward(self, logits, labels, embeddings, scores, class_weights=None):
+        l_corn = self.corn(logits, labels, class_weights=class_weights)
+        l_scl  = self.scl(embeddings, scores)
+        total  = self.alpha * l_corn + self.beta * l_scl
         return total, {"corn": l_corn.item(), "scl": l_scl.item(), "total": total.item()}
 
 

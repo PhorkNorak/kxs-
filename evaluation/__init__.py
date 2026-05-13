@@ -182,3 +182,46 @@ def format_results(metrics, name):
     flag = "PASS ✓" if q >= 0.70 else "FAIL ✗"
     return (f"  {name:<45s} QWK={q:.4f} [{flag}]  RMSE={metrics.get('rmse',0):.4f}  "
             f"Pearson={metrics.get('pearson',0):.4f}  F1w={metrics.get('f1_weighted',0):.4f}")
+
+
+def calibrate_thresholds(val_scores, val_labels, n_classes=5):
+    """Find bin boundaries that maximise QWK on val_scores / val_labels.
+
+    Uses Nelder-Mead optimisation over (n_classes - 1) interior thresholds.
+
+    Returns:
+        thresholds: sorted np.ndarray of shape [n_classes - 1], values in [0, 1]
+    """
+    from scipy.optimize import minimize
+    val_scores = np.asarray(val_scores, dtype=float)
+    val_labels = np.asarray(val_labels, dtype=int)
+
+    def neg_qwk(t):
+        t_sorted = np.sort(t)
+        preds = np.digitize(val_scores, t_sorted).clip(0, n_classes - 1)
+        try:
+            return -cohen_kappa_score(val_labels, preds, weights="quadratic")
+        except Exception:
+            return 0.0
+
+    init = np.linspace(0.15, 0.85, n_classes - 1)
+    result = minimize(neg_qwk, init, method="Nelder-Mead",
+                      options={"xatol": 1e-5, "fatol": 1e-5, "maxiter": 10000})
+    return np.sort(result.x).clip(0.0, 1.0)
+
+
+def apply_thresholds(scores, thresholds, n_classes=5):
+    """Apply calibrated bin boundaries to continuous scores.
+
+    Args:
+        scores:     array-like of continuous values in [0, 1]
+        thresholds: sorted array of shape [n_classes - 1]
+        n_classes:  total number of bins (default 5)
+
+    Returns:
+        integer label array clipped to [0, n_classes - 1]
+    """
+    return np.digitize(
+        np.asarray(scores, dtype=float),
+        np.sort(thresholds)
+    ).clip(0, n_classes - 1)

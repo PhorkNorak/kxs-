@@ -11,9 +11,16 @@ Uses PIL (Pillow) + Unifont for proper Khmer Unicode rendering.
 Saves: one PNG per sample + combined summary sheet.
 
 Run:
-    python3 xai_visualizer.py
+    python3 xai_visualizer.py                       # all available models
+    python3 xai_visualizer.py --model bilstm_ar      # single model
+    python3 xai_visualizer.py --model all --n 10     # first 10 samples per model
+
+Discovers results/xai_*_data.json files produced by generate_xai_all.py.
+Saves one report per model to results/xai_visuals/{model_key}/.
 """
 
+import argparse
+import glob as _glob
 import json
 import os
 import math
@@ -22,9 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ── Paths ──────────────────────────────────────────────────────────────
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
-OUTPUT_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "xai_visuals")
 FONT_PATH   = "/usr/share/fonts/opentype/unifont/unifont.otf"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ── Color palette ──────────────────────────────────────────────────────
 BG        = (13,  15,  20)     # Dark background
@@ -319,7 +324,15 @@ def render_sample_card(sample, idx, fonts, card_w=900):
     cy += Q_H
 
     # ── Highlighted student answer ─────────────────────────────────────
-    draw_label(draw, fonts, PAD, cy, "Student Answer — Gradient Saliency", INNER_W)
+    has_sal  = sample.get("has_saliency", True)
+    inp_fmt  = sample.get("input_format", "ar")
+    if not has_sal:
+        sal_label = "Student Answer (No Gradient Saliency)"
+    elif inp_fmt == "qar":
+        sal_label = "Question + Answer — Gradient Saliency"
+    else:
+        sal_label = "Student Answer — Gradient Saliency"
+    draw_label(draw, fonts, PAD, cy, sal_label, INNER_W)
     cy += 16
     ans_bg = with_alpha(SURFACE, 0.6)
     draw.rectangle([PAD, cy, card_w-PAD, cy + ANS_H - 10], fill=ans_bg)
@@ -387,10 +400,11 @@ def render_sample_card(sample, idx, fonts, card_w=900):
     # ── Footer ────────────────────────────────────────────────────────
     draw.line([(0, total_h - FOOTER_H), (card_w, total_h - FOOTER_H)],
               fill=BORDER, width=1)
-    footer_text = (
-        "KhmerXScore  ·  BiLSTM+Attention (AR)  ·  CORN+SCL  ·  "
-        "Saliency: ‖∂loss/∂emb‖₂  ·  CharTokenizer (Unifont)"
-    )
+    mname = sample.get("model_name", "KhmerXScore")
+    if sample.get("has_saliency", True):
+        footer_text = f"KhmerXScore  ·  {mname}  ·  CORN+SCL  ·  Saliency: ||d_loss/d_emb||_2"
+    else:
+        footer_text = f"KhmerXScore  ·  {mname}  ·  No gradient saliency (deterministic model)"
     fw, _ = text_size(draw, footer_text, fonts["xs"])
     draw.text(((card_w - fw)//2, total_h - FOOTER_H + 10),
               footer_text, font=fonts["xs"], fill=MUTED)
@@ -432,78 +446,104 @@ def make_legend_strip(fonts, width=900, height=50):
     return img
 
 
-def main():
-    print("KhmerXScore XAI Visualizer")
-    print("="*50)
-
-    # Load data
-    data_path = os.path.join(RESULTS_DIR, "xai_ar_data.json")
-    if not os.path.exists(data_path):
-        print(f"ERROR: {data_path} not found. Run the main experiment first.")
-        return
-
+def _run_model(data_path, output_dir, fonts, max_samples=None):
+    """Render all sample cards for one model and save combined report."""
     with open(data_path, encoding="utf-8") as f:
         samples = json.load(f)
+    if max_samples is not None:
+        samples = samples[:max_samples]
 
-    print(f"Loaded {len(samples)} samples")
-    fonts = load_fonts()
-    print("Fonts loaded")
+    model_label = samples[0].get("model_name", os.path.basename(data_path)) if samples else ""
+    print(f"  {len(samples)} samples  [{model_label}]")
+    os.makedirs(output_dir, exist_ok=True)
 
-    legend = make_legend_strip(fonts)
     all_cards = []
-
     for i, sample in enumerate(samples):
-        print(f"\nRendering sample {i+1}/{len(samples)}: "
-              f"idx={sample['idx']}  true={sample['true_label']}  "
-              f"pred={sample['pred_label']}  {'✓' if sample['correct'] else '✗'}")
-
+        tag = "OK" if sample["correct"] else "--"
+        print(f"  [{i+1:2d}/{len(samples)}] idx={sample['idx']}  "
+              f"true={sample['true_label']}  pred={sample['pred_label']}  {tag}")
         card = render_sample_card(sample, i, fonts, card_w=900)
-
-        # Save individual card
-        out_path = os.path.join(OUTPUT_DIR, f"sample_{i+1:02d}_true{sample['true_label']}_pred{sample['pred_label']}.png")
+        out_path = os.path.join(
+            output_dir,
+            f"sample_{i+1:02d}_true{sample['true_label']}_pred{sample['pred_label']}.png",
+        )
         card.save(out_path, "PNG", dpi=(150, 150))
-        print(f"  Saved: {out_path}  ({card.width}×{card.height}px)")
         all_cards.append(card)
 
-    # ── Combined sheet ────────────────────────────────────────────────
-    print("\nBuilding combined sheet...")
-    LEGEND_H = 50
-    GAP      = 12
-    total_h  = LEGEND_H + sum(c.height + GAP for c in all_cards) + GAP
-    sheet_w  = 900
+    if not all_cards:
+        return
 
-    sheet = Image.new("RGB", (sheet_w, total_h), BG)
-
-    # Header banner
-    draw_sheet = ImageDraw.Draw(sheet)
-    draw_sheet.rectangle([0, 0, sheet_w, LEGEND_H], fill=SURFACE)
-    title = "KhmerXScore — XAI Explanation Report"
-    title_font = fonts["lg"]
-    tw, _ = text_size(draw_sheet, title, title_font)
-    draw_sheet.text(((sheet_w - tw)//2, 12), title, font=title_font, fill=ACCENT)
-    draw_sheet.line([(0, LEGEND_H-1), (sheet_w, LEGEND_H-1)], fill=BORDER)
-
-    # Paste cards
-    cy = LEGEND_H + GAP
+    GAP     = 12
+    HDR_H   = 50
+    total_h = HDR_H + sum(c.height + GAP for c in all_cards) + GAP
+    sheet   = Image.new("RGB", (900, total_h), BG)
+    ds      = ImageDraw.Draw(sheet)
+    ds.rectangle([0, 0, 900, HDR_H], fill=SURFACE)
+    title = f"KhmerXScore — XAI Report: {model_label}"
+    tw, _ = text_size(ds, title, fonts["lg"])
+    ds.text(((900 - tw) // 2, 12), title, font=fonts["lg"], fill=ACCENT)
+    ds.line([(0, HDR_H - 1), (900, HDR_H - 1)], fill=BORDER)
+    cy = HDR_H + GAP
     for card in all_cards:
         sheet.paste(card, (0, cy))
         cy += card.height + GAP
 
-    combined_path = os.path.join(OUTPUT_DIR, "xai_report_combined.png")
+    combined_path = os.path.join(output_dir, "xai_report_combined.png")
     sheet.save(combined_path, "PNG", dpi=(150, 150))
-    print(f"Combined sheet: {combined_path}  ({sheet.width}×{sheet.height}px)")
+    print(f"  Combined: {combined_path}  ({sheet.width}x{sheet.height}px)")
 
-    # ── Summary stats ─────────────────────────────────────────────────
-    print("\n" + "="*50)
-    print("SUMMARY")
-    print("="*50)
-    correct   = sum(1 for s in samples if s["correct"])
-    high_unc  = sum(1 for s in samples if s["uncertainty"] >= 0.15)
-    avg_sal   = np.mean([v for s in samples for _,v in s["char_saliency"] if v > 0.05])
-    print(f"  Correct predictions :  {correct}/{len(samples)}")
-    print(f"  High uncertainty    :  {high_unc}/{len(samples)}")
-    print(f"  Mean active saliency:  {avg_sal:.4f}")
-    print(f"\nFiles saved to: {OUTPUT_DIR}")
+    correct  = sum(1 for s in samples if s["correct"])
+    unc_vals = [s["uncertainty"] for s in samples]
+    sal_vals = [v for s in samples for _, v in s["char_saliency"] if v > 0.05]
+    print(f"  Correct: {correct}/{len(samples)}  "
+          f"mean_unc={np.mean(unc_vals):.4f}" +
+          (f"  mean_active_sal={np.mean(sal_vals):.4f}" if sal_vals else ""))
+
+
+def main():
+    parser = argparse.ArgumentParser(description="KhmerXScore XAI Visualizer")
+    parser.add_argument(
+        "--model", default="all",
+        help="Model key (e.g. bilstm_ar) or 'all' to process all xai_*_data.json files.",
+    )
+    parser.add_argument(
+        "--n", type=int, default=None,
+        help="Max samples to render per model (default: all).",
+    )
+    args = parser.parse_args()
+
+    print("KhmerXScore XAI Visualizer")
+    print("=" * 50)
+
+    if args.model == "all":
+        data_files = sorted(_glob.glob(os.path.join(RESULTS_DIR, "xai_*_data.json")))
+        if not data_files:
+            print(f"No xai_*_data.json files found in {RESULTS_DIR}")
+            print("Run first:  python generate_xai_all.py")
+            return
+    else:
+        p = os.path.join(RESULTS_DIR, f"xai_{args.model}_data.json")
+        if not os.path.exists(p):
+            # Backward compat: also accept bare filename passed as model key
+            p2 = os.path.join(RESULTS_DIR, args.model)
+            if os.path.exists(p2):
+                p = p2
+            else:
+                print(f"ERROR: {p} not found.")
+                print("Run first:  python generate_xai_all.py")
+                return
+        data_files = [p]
+
+    fonts = load_fonts()
+    print(f"Fonts loaded  |  models to render: {len(data_files)}\n")
+
+    for data_path in data_files:
+        model_key = (os.path.basename(data_path)
+                     .replace("xai_", "").replace("_data.json", ""))
+        output_dir = os.path.join(RESULTS_DIR, "xai_visuals", model_key)
+        print(f"-- {model_key} --")
+        _run_model(data_path, output_dir, fonts, max_samples=args.n)
+        print()
 
 
 if __name__ == "__main__":

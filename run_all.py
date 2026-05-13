@@ -32,7 +32,8 @@ from models.losses import corn_logits_to_label, corn_logits_to_score
 from train import train_transformer, evaluate_model, evaluate_with_uncertainty
 from evaluation import (compute_all_metrics, bootstrap_qwk_ci, paired_bootstrap_test,
                          selective_prediction_analysis, compute_per_subject,
-                         format_results, compute_comprehensiveness, compute_sufficiency)
+                         format_results, compute_comprehensiveness, compute_sufficiency,
+                         calibrate_thresholds, apply_thresholds)
 
 
 # ── Helpers ──────────────────────────────────────────────────
@@ -249,6 +250,15 @@ def stage_transformers(only_backbones=None):
                 mc, mc_tl, mc_pl, unc = evaluate_with_uncertainty(model, tel, TRAIN_CFG.loss_type, DEVICE, TRAIN_CFG.mc_dropout_T)
                 m["mc_uncertainty"] = mc["mean_uncertainty"]
                 m["selective_prediction"] = selective_prediction_analysis(mc_tl, mc_pl, unc)
+                # QWK threshold calibration (fit on val, apply to test)
+                if CALIBRATE_THRESHOLDS:
+                    vl_tl, vl_pl, vl_ts, vl_ps = collect_preds(model, vl, TRAIN_CFG.loss_type)
+                    thresholds = calibrate_thresholds(vl_ps, vl_tl)
+                    pl_cal = apply_thresholds(ps, thresholds)
+                    m_cal  = compute_all_metrics(tl, pl_cal, ts, ps)
+                    m["calibrated_qwk"]        = m_cal["qwk"]
+                    m["calibrated_thresholds"] = thresholds.tolist()
+                    print(f"    Calibrated QWK: {m_cal['qwk']:.4f}  (raw: {m['qwk']:.4f})")
                 results[run] = m
                 print(format_results(m, run))
                 save_results(results, "transformers.json")

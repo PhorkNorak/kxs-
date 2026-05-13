@@ -27,22 +27,26 @@ def train_transformer(model, train_loader, val_loader, config,
     warmup = int(total_steps * config.warmup_ratio)
     scheduler = get_linear_schedule_with_warmup(optimizer, warmup, total_steps)
 
+    # Pre-compute class weights from the full training set (one pass, done once)
+    _all_labels = np.concatenate([b["label"].numpy() for b in train_loader])
+    class_weights = compute_class_weights(_all_labels).to(device)
+
     # Loss
     use_scl = config.loss_type == "corn" and config.scl_beta > 0
+    epsilon = getattr(config, "corn_epsilon", 0.0)
     if config.loss_type == "corn":
         if use_scl:
             criterion = KXCLLoss(5, config.scl_alpha, config.scl_beta,
-                                 config.scl_temperature, config.scl_margin_scale)
+                                 config.scl_temperature, config.scl_margin_scale,
+                                 epsilon=epsilon)
         else:
-            criterion = CORNLoss(5)
+            criterion = CORNLoss(5, epsilon=epsilon)
     elif config.loss_type == "weighted_mse":
-        labels = []
-        for b in train_loader:
-            labels.extend(b["label"].numpy())
-        w = compute_class_weights(np.array(labels)).to(device)
-        criterion = WeightedMSELoss(w)
+        criterion = WeightedMSELoss(class_weights)
+        class_weights = None   # already baked into criterion; avoid double-weighting
     else:
         criterion = nn.MSELoss()
+        class_weights = None
 
     best_qwk, patience = -1.0, 0
     history = {"train_loss": [], "val_qwk": []}
@@ -60,13 +64,16 @@ def train_transformer(model, train_loader, val_loader, config,
             labels = batch["label"].to(device)
 
             optimizer.zero_grad()
+            use_cw = class_weights is not None and getattr(config, "corn_class_weighted", True)
             if use_scl:
                 logits, emb = model(ids_a, mask_a, ids_r, mask_r, return_embeddings=True)
-                loss, _ = criterion(logits, labels, emb, scores)
+                loss, _ = criterion(logits, labels, emb, scores,
+                                    class_weights=class_weights if use_cw else None)
             else:
                 logits = model(ids_a, mask_a, ids_r, mask_r)
                 if config.loss_type == "corn":
-                    loss = criterion(logits, labels)
+                    loss = criterion(logits, labels,
+                                     class_weights=class_weights if use_cw else None)
                 elif config.loss_type == "weighted_mse":
                     loss = criterion(logits.squeeze(-1), scores, labels)
                 else:

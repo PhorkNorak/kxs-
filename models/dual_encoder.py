@@ -22,6 +22,10 @@ class DualEncoder(nn.Module):
         self.loss_type = loss_type
         self.num_classes = num_classes
         config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+        # Disable unpadding/flash-attn — cumulative position IDs exceed per-seq RoPE cache
+        for attr in ("unpad_inputs", "use_flash_attn"):
+            if hasattr(config, attr):
+                setattr(config, attr, False)
         self.encoder = AutoModel.from_pretrained(model_name, config=config, trust_remote_code=True)
         self.hidden_dim = config.hidden_size
         if freeze_layers > 0:
@@ -54,7 +58,7 @@ class DualEncoder(nn.Module):
         return (hidden * m).sum(1) / m.sum(1).clamp(min=1e-9)
 
     def encode(self, input_ids, attention_mask):
-        out = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+        out = self.encoder(input_ids=input_ids, attention_mask=attention_mask, return_dict=True)
         return self._pool(out.last_hidden_state, attention_mask)
 
     def forward(self, input_ids_a, attention_mask_a, input_ids_r, attention_mask_r,
@@ -99,6 +103,9 @@ class CrossEncoder(nn.Module):
         self.loss_type = loss_type
         self.num_classes = num_classes
         config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+        for attr in ("unpad_inputs", "use_flash_attn"):
+            if hasattr(config, attr):
+                setattr(config, attr, False)
         self.encoder = AutoModel.from_pretrained(model_name, config=config, trust_remote_code=True)
         self.hidden_dim = config.hidden_size
         out = (num_classes - 1) if loss_type == "corn" else 1
