@@ -41,6 +41,35 @@ def save_json(path: str, obj: dict):
         json.dump(obj, f, indent=2, ensure_ascii=False)
 
 
+def save_predictions_csv(out_dir: str, split_name: str, df_proc, pred_scores):
+    """Write per-sample predictions to <out_dir>/predictions_<split_name>.csv.
+
+    Columns: idx, Question, Reference, Answer, true_label, true_score,
+             pred_score, pred_label, abs_error
+    """
+    import pandas as pd
+
+    pred_scores = np.asarray(pred_scores, dtype=np.float64).clip(0.0, 1.0)
+    pred_labels = np.round(pred_scores * 4).astype(int).clip(0, 4)
+    true_labels = df_proc["score_label"].values.astype(int)
+    true_scores = df_proc["normalized_score"].values.astype(float)
+
+    out = pd.DataFrame({
+        "idx": np.arange(len(df_proc)),
+        "Question":  df_proc["Question"].values,
+        "Reference": df_proc["Reference"].values,
+        "Answer":    df_proc["Answer"].values,
+        "true_label": true_labels,
+        "true_score": true_scores,
+        "pred_score": pred_scores,
+        "pred_label": pred_labels,
+        "abs_error":  np.abs(pred_labels - true_labels),
+    })
+    out_path = os.path.join(out_dir, f"predictions_{split_name}.csv")
+    out.to_csv(out_path, index=False, encoding="utf-8-sig")
+    return out_path
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Classical
 # ────────────────────────────────────────────────────────────────────────────
@@ -73,6 +102,8 @@ def train_classical(model_id, preprocess_mode, input_fmt, train_df, val_df, test
                "preprocess": preprocess_mode, "input": input_fmt})
     save_json(os.path.join(out, "metrics.json"),
               {"val": val_m, "test": test_m, "best_epoch": None})
+    save_predictions_csv(out, "val",  val_p,  val_pred)
+    save_predictions_csv(out, "test", test_p, test_pred)
     return {"val": val_m, "test": test_m}
 
 
@@ -207,6 +238,9 @@ def _train_neural_loop(
 
     if best_state is not None:
         torch.save(best_state, os.path.join(out, "best.pt"))
+
+    save_predictions_csv(out, "val",  val_loader.dataset.df,  val_pred)
+    save_predictions_csv(out, "test", test_loader.dataset.df, test_pred)
 
     return {"val": val_m, "test": test_m, "best_epoch": best_epoch}
 

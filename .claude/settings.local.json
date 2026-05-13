@@ -41,7 +41,8 @@
       "Bash(SSL_CERT_FILE=\"C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\Lib\\\\site-packages\\\\certifi\\\\cacert.pem\" REQUESTS_CA_BUNDLE=\"C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\Lib\\\\site-packages\\\\certifi\\\\cacert.pem\" CURL_CA_BUNDLE=\"C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\Lib\\\\site-packages\\\\certifi\\\\cacert.pem\" python -m simple.run_all --only raw_ra_cross_xlmr --epochs 2 --skip-xai)",
       "PowerShell($env:SSL_CERT_FILE = \"C:\\\\Users\\\\Admin\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\Lib\\\\site-packages\\\\certifi\\\\cacert.pem\"; $env:REQUESTS_CA_BUNDLE = $env:SSL_CERT_FILE; $env:CURL_CA_BUNDLE = $env:SSL_CERT_FILE; python -m simple.run_all --only raw_ra_cross_xlmr --epochs 2 --skip-xai 2>&1 | Select-Object -Last 30)",
       "Bash(python -m simple.run_all --only raw_ra_bilstm --epochs 2 --skip-xai)",
-      "Bash(python -c \"import pandas as pd; df = pd.read_csv\\('simple/data/dataset.csv', encoding='utf-8-sig'\\); print\\('rows:', len\\(df\\)\\); print\\('cols:', list\\(df.columns\\)\\); print\\(df.head\\(2\\)\\)\")"
+      "Bash(python -c \"import pandas as pd; df = pd.read_csv\\('simple/data/dataset.csv', encoding='utf-8-sig'\\); print\\('rows:', len\\(df\\)\\); print\\('cols:', list\\(df.columns\\)\\); print\\(df.head\\(2\\)\\)\")",
+      "Bash(python -m simple.run_all --only segment_ra_tfidf_svr --skip-xai)"
     ]
   }
 }

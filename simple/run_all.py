@@ -29,8 +29,7 @@ from simple.train import (
 
 LEADERBOARD_HEADER = [
     "run_id", "preprocess", "input", "model", "family",
-    "test_qwk", "test_accuracy", "test_adjacent_accuracy",
-    "test_rmse", "test_mae", "test_pearson", "test_spearman", "test_f1_weighted",
+    "test_qwk", "test_accuracy", "test_adjacent_accuracy", "test_mae",
     "val_qwk", "best_epoch", "seconds",
 ]
 
@@ -107,11 +106,7 @@ def main():
                 "test_qwk": f"{test_m['qwk']:.4f}",
                 "test_accuracy": f"{test_m['accuracy']:.4f}",
                 "test_adjacent_accuracy": f"{test_m['adjacent_accuracy']:.4f}",
-                "test_rmse": f"{test_m['rmse']:.4f}",
                 "test_mae": f"{test_m['mae']:.4f}",
-                "test_pearson": f"{test_m['pearson']:.4f}",
-                "test_spearman": f"{test_m['spearman']:.4f}",
-                "test_f1_weighted": f"{test_m['f1_weighted']:.4f}",
                 "val_qwk": f"{val_m['qwk']:.4f}",
                 "best_epoch": result.get("best_epoch", ""),
                 "seconds": f"{dt:.1f}",
@@ -126,8 +121,7 @@ def main():
                 "run_id": run_id, "preprocess": prep, "input": inp,
                 "model": model_id, "family": family,
                 "test_qwk": "ERR", "test_accuracy": "", "test_adjacent_accuracy": "",
-                "test_rmse": "", "test_mae": "", "test_pearson": "", "test_spearman": "",
-                "test_f1_weighted": "", "val_qwk": "", "best_epoch": "",
+                "test_mae": "", "val_qwk": "", "best_epoch": "",
                 "seconds": f"{time.time() - t0:.1f}",
             })
 
