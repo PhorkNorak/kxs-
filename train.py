@@ -51,6 +51,7 @@ def train_transformer(model, train_loader, val_loader, config,
     best_qwk, patience = -1.0, 0
     history = {"train_loss": [], "val_qwk": []}
     ckpt = os.path.join(checkpoint_dir, f"{run_name}_best.pt")
+    _nan_diag = {"done": False}
 
     for ep in range(config.max_epochs):
         model.train()
@@ -67,6 +68,16 @@ def train_transformer(model, train_loader, val_loader, config,
             use_cw = class_weights is not None and getattr(config, "corn_class_weighted", True)
             if use_scl:
                 logits, emb = model(ids_a, mask_a, ids_r, mask_r, return_embeddings=True)
+                if not _nan_diag["done"] and (torch.isnan(logits).any() or torch.isnan(emb).any()):
+                    with torch.no_grad():
+                        ea = model.encode(ids_a, mask_a)
+                        er = model.encode(ids_r, mask_r)
+                    print(f"\n  [NaN-diag] e_a nan={torch.isnan(ea).any().item()} inf={torch.isinf(ea).any().item()} "
+                          f"min={ea.min().item():.3g} max={ea.max().item():.3g}")
+                    print(f"  [NaN-diag] e_r nan={torch.isnan(er).any().item()} inf={torch.isinf(er).any().item()} "
+                          f"min={er.min().item():.3g} max={er.max().item():.3g}")
+                    print(f"  [NaN-diag] logits nan={torch.isnan(logits).any().item()}  emb_scl nan={torch.isnan(emb).any().item()}")
+                    _nan_diag["done"] = True
                 loss, _ = criterion(logits, labels, emb, scores,
                                     class_weights=class_weights if use_cw else None)
             else:
