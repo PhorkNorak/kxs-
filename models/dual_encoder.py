@@ -94,7 +94,40 @@ class DualEncoder(nn.Module):
         m = mask.unsqueeze(-1).expand(hidden.size()).to(dtype=hidden.dtype)
         return (hidden * m).sum(1) / m.sum(1).clamp(min=1e-9)
 
+    def _install_nan_hooks(self):
+        if getattr(self, "_nan_hooks_done", False):
+            return
+        self._nan_hooks_done = True
+        state = {"first": None}
+
+        def make_hook(name):
+            def hook(_mod, _inp, out):
+                if state["first"] is not None:
+                    return
+                t = out[0] if isinstance(out, tuple) else out
+                if not torch.is_tensor(t):
+                    return
+                if torch.isnan(t).any() or torch.isinf(t).any():
+                    state["first"] = name
+                    nan_n = torch.isnan(t).sum().item()
+                    inf_n = torch.isinf(t).sum().item()
+                    print(f"\n  [NaN-loc] FIRST nan/inf at module: {name}")
+                    print(f"  [NaN-loc]   out.shape={tuple(t.shape)}  nan={nan_n}  inf={inf_n}")
+                    # also print input stats
+                    if isinstance(_inp, tuple) and len(_inp) > 0 and torch.is_tensor(_inp[0]):
+                        x = _inp[0]
+                        print(f"  [NaN-loc]   in.shape={tuple(x.shape)}  "
+                              f"in.nan={torch.isnan(x).any().item()}  "
+                              f"in.min={x.float().min().item():.3g}  in.max={x.float().max().item():.3g}")
+            return hook
+
+        for name, mod in self.encoder.named_modules():
+            if name == "":
+                continue
+            mod.register_forward_hook(make_hook(name))
+
     def encode(self, input_ids, attention_mask):
+        self._install_nan_hooks()
         bs, seq_len = input_ids.shape
         position_ids = torch.arange(seq_len, device=input_ids.device, dtype=torch.long).unsqueeze(0).expand(bs, -1)
         out = self.encoder(
