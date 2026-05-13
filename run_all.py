@@ -241,9 +241,11 @@ def stage_transformers(only_backbones=None):
                                      dropout=TRAIN_CFG.dropout, freeze_layers=TRAIN_CFG.freeze_layers)
                 _tok_sz = len(tokenizer)
                 _emb_sz = model.encoder.embeddings.word_embeddings.weight.shape[0]
-                if _tok_sz != _emb_sz:
-                    print(f"    vocab mismatch: tokenizer={_tok_sz}, model={_emb_sz} → resizing")
+                if _tok_sz > _emb_sz:
+                    print(f"    vocab mismatch: tokenizer={_tok_sz} > model={_emb_sz} → extending")
                     model.encoder.resize_token_embeddings(_tok_sz)
+                elif _tok_sz < _emb_sz:
+                    print(f"    vocab info: tokenizer={_tok_sz} < model={_emb_sz} → keeping pretrained rows (no shrink)")
                 tr_res = train_transformer(model, trl, vl, TRAIN_CFG, DEVICE, CHECKPOINT_DIR, run)
                 tl, pl, ts, ps = collect_preds(model, tel, TRAIN_CFG.loss_type)
                 m = compute_all_metrics(tl, pl, ts, ps)
