@@ -28,7 +28,9 @@
       "Bash(python -c \"import run_all; print\\('run_all.py OK'\\)\")",
       "Bash(python -m pytest tests/ -v)",
       "Bash(python3 -c \"import json; d=json.load\\(open\\('/home/norak/R&I/kxs-/results/xai.json'\\)\\); print\\(list\\(d.keys\\(\\)\\)[:10]\\); print\\(type\\(d.get\\('ig_attributions', [None]\\)[0]\\) if d.get\\('ig_attributions'\\) else 'no ig_attr'\\)\")",
-      "Bash(python -c \"import json; d=json.load\\(open\\('d:/cloud/Documents/work/R&I/khmer/kxs/results/xai.json'\\)\\); print\\(list\\(d.keys\\(\\)\\)[:10]\\)\")"
+      "Bash(python -c \"import json; d=json.load\\(open\\('d:/cloud/Documents/work/R&I/khmer/kxs/results/xai.json'\\)\\); print\\(list\\(d.keys\\(\\)\\)[:10]\\)\")",
+      "Bash(find ~ -path \"*/Alibaba_hyphen_NLP/new_hyphen_impl*/modeling.py\" 2>/dev/null | head -1)",
+      "Read(//c/Users/Admin/**)"
     ]
   }
 }

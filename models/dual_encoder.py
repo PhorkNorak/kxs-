@@ -39,11 +39,17 @@ def _patch_rope(encoder):
         return
     print(f"    [RoPE] cos_cached.shape={re.cos_cached.shape}  max_seq_len_cached={re.max_seq_len_cached}")
 
+    _diag = {"printed": False}
+
     def _safe_forward(self, x, seq_len=None):
         if seq_len is not None and seq_len > self.max_seq_len_cached:
             self._set_cos_sin_cache(seq_len, x.device, x.dtype)
         cos = self.cos_cached.to(device=x.device, dtype=x.dtype)
         sin = self.sin_cached.to(device=x.device, dtype=x.dtype)
+        if not _diag["printed"]:
+            print(f"    [RoPE call] x.shape={tuple(x.shape)}  x.device={x.device}  "
+                  f"seq_len={seq_len}  cos.shape={tuple(cos.shape)}  cos.device={cos.device}")
+            _diag["printed"] = True
         return cos, sin
 
     re.forward = types.MethodType(_safe_forward, re)
@@ -89,8 +95,11 @@ class DualEncoder(nn.Module):
         return (hidden * m).sum(1) / m.sum(1).clamp(min=1e-9)
 
     def encode(self, input_ids, attention_mask):
+        bs, seq_len = input_ids.shape
+        position_ids = torch.arange(seq_len, device=input_ids.device, dtype=torch.long).unsqueeze(0).expand(bs, -1)
         out = self.encoder(
-            input_ids=input_ids, attention_mask=attention_mask, return_dict=True
+            input_ids=input_ids, attention_mask=attention_mask,
+            position_ids=position_ids, return_dict=True
         )
         return self._pool(out.last_hidden_state, attention_mask)
 
