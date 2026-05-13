@@ -9,6 +9,7 @@ References:
     Gal & Ghahramani 2016 — MC Dropout
 """
 
+import types
 import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoConfig
@@ -21,6 +22,33 @@ def _load_encoder(model_name, config):
     )
 
 
+def _patch_rope(encoder):
+    """Patch GTE-style NTK RoPE: return full cache with explicit device placement.
+
+    GTE's NewEmbeddings.forward does rope_cos[position_ids] where rope_cos is
+    cos_cached[:seq_len]. If the cache is on a different device, or if the slice
+    size is somehow mismatched, CUDA index OOB fires. Returning the unsliced cache
+    is mathematically equivalent (position_ids selects the same rows) and avoids
+    any slice/device edge case.
+    """
+    emb = getattr(encoder, 'embeddings', None)
+    if emb is None:
+        return
+    re = getattr(emb, 'rotary_emb', None)
+    if re is None:
+        return
+    print(f"    [RoPE] cos_cached.shape={re.cos_cached.shape}  max_seq_len_cached={re.max_seq_len_cached}")
+
+    def _safe_forward(self, x, seq_len=None):
+        if seq_len is not None and seq_len > self.max_seq_len_cached:
+            self._set_cos_sin_cache(seq_len, x.device, x.dtype)
+        cos = self.cos_cached.to(device=x.device, dtype=x.dtype)
+        sin = self.sin_cached.to(device=x.device, dtype=x.dtype)
+        return cos, sin
+
+    re.forward = types.MethodType(_safe_forward, re)
+
+
 class DualEncoder(nn.Module):
     def __init__(self, model_name="xlm-roberta-base", num_classes=5,
                  dropout=0.2, freeze_layers=6, loss_type="corn"):
@@ -30,6 +58,7 @@ class DualEncoder(nn.Module):
         config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
         self.encoder = _load_encoder(model_name, config)
         self.hidden_dim = config.hidden_size
+        _patch_rope(self.encoder)
         if freeze_layers > 0:
             self._freeze(freeze_layers)
         out = (num_classes - 1) if loss_type == "corn" else 1
