@@ -58,7 +58,10 @@ class DualEncoder(nn.Module):
         return (hidden * m).sum(1) / m.sum(1).clamp(min=1e-9)
 
     def encode(self, input_ids, attention_mask):
-        out = self.encoder(input_ids=input_ids, attention_mask=attention_mask, return_dict=True)
+        B, L = input_ids.shape
+        position_ids = torch.arange(L, device=input_ids.device).unsqueeze(0).expand(B, -1)
+        out = self.encoder(input_ids=input_ids, attention_mask=attention_mask,
+                           position_ids=position_ids, return_dict=True)
         return self._pool(out.last_hidden_state, attention_mask)
 
     def forward(self, input_ids_a, attention_mask_a, input_ids_r, attention_mask_r,

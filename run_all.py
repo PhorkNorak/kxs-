@@ -239,6 +239,11 @@ def stage_transformers(only_backbones=None):
                     TRAIN_CFG.use_class_balanced, NUM_WORKERS)
                 model = create_model(bname, "dual", TRAIN_CFG.loss_type,
                                      dropout=TRAIN_CFG.dropout, freeze_layers=TRAIN_CFG.freeze_layers)
+                _tok_sz = len(tokenizer)
+                _emb_sz = model.encoder.embeddings.word_embeddings.weight.shape[0]
+                if _tok_sz != _emb_sz:
+                    print(f"    vocab mismatch: tokenizer={_tok_sz}, model={_emb_sz} → resizing")
+                    model.encoder.resize_token_embeddings(_tok_sz)
                 tr_res = train_transformer(model, trl, vl, TRAIN_CFG, DEVICE, CHECKPOINT_DIR, run)
                 tl, pl, ts, ps = collect_preds(model, tel, TRAIN_CFG.loss_type)
                 m = compute_all_metrics(tl, pl, ts, ps)
