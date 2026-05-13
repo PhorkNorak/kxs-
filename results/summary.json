@@ -1,26 +1,6 @@
 {
   "ranked": [
     {
-      "model": "loss_weighted_mse",
-      "qwk": 0.7686,
-      "qwk_std": 0.0,
-      "rmse": 0.1847,
-      "pearson": 0.7791,
-      "f1_w": 0.6688,
-      "pass": true,
-      "n_seeds": 1
-    },
-    {
-      "model": "scl_beta_1.0",
-      "qwk": 0.7675,
-      "qwk_std": 0.0,
-      "rmse": 0.1879,
-      "pearson": 0.7764,
-      "f1_w": 0.6939,
-      "pass": true,
-      "n_seeds": 1
-    },
-    {
       "model": "tfidf_svr_qar",
       "qwk": 0.7672,
       "qwk_std": 0.0,

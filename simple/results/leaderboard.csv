@@ -1,0 +1,7 @@
+run_id,preprocess,input,model,family,test_qwk,test_accuracy,test_adjacent_accuracy,test_rmse,test_mae,test_pearson,test_spearman,test_f1_weighted,val_qwk,best_epoch,seconds
+segment_ra_tfidf_svr,segment,ra,tfidf_svr,classical,0.7699,0.6798,0.9438,0.6786,0.5089,0.8205,0.8286,0.6940,0.6691,,218.5
+raw_ra_cross_xlmr,raw,ra,cross_xlmr,cross,ERR,,,,,,,,,,29.9
+raw_ra_cross_xlmr,raw,ra,cross_xlmr,cross,ERR,,,,,,,,,,27.9
+raw_ra_cross_xlmr,raw,ra,cross_xlmr,cross,ERR,,,,,,,,,,32.9
+raw_ra_bilstm,raw,ra,bilstm,bilstm,0.3092,0.2753,0.8427,1.1796,1.0637,0.4733,0.4932,0.1721,0.2561,1,27.5
+segment_ra_tfidf_svr,segment,ra,tfidf_svr,classical,0.7699,0.6798,0.9438,0.6786,0.5089,0.8205,0.8286,0.6940,0.6691,,60.4
