@@ -23,13 +23,10 @@ def _load_encoder(model_name, config):
 
 
 def _patch_rope(encoder):
-    """Patch GTE-style NTK RoPE: return full cache with explicit device placement.
-
-    GTE's NewEmbeddings.forward does rope_cos[position_ids] where rope_cos is
-    cos_cached[:seq_len]. If the cache is on a different device, or if the slice
-    size is somehow mismatched, CUDA index OOB fires. Returning the unsliced cache
-    is mathematically equivalent (position_ids selects the same rows) and avoids
-    any slice/device edge case.
+    """Patch GTE-style NTK RoPE: rebuild cos/sin cache in fp32 to avoid fp16
+    overflow in `t * inv_freq` (the largest products exceed fp16's 65504 max
+    and produce NaN through cos()), then return the full cache (no slicing) on
+    the correct device.
     """
     emb = getattr(encoder, 'embeddings', None)
     if emb is None:
@@ -37,18 +34,41 @@ def _patch_rope(encoder):
     re = getattr(emb, 'rotary_emb', None)
     if re is None:
         return
-    print(f"    [RoPE] cos_cached.shape={re.cos_cached.shape}  max_seq_len_cached={re.max_seq_len_cached}")
+    print(f"    [RoPE] cos_cached.shape={re.cos_cached.shape}  "
+          f"max_seq_len_cached={re.max_seq_len_cached}  "
+          f"cos.dtype={re.cos_cached.dtype}  "
+          f"cos.nan_count={int(torch.isnan(re.cos_cached).sum())}")
+
+    # Rebuild cache manually in fp32. The model's _set_cos_sin_cache may have
+    # produced NaN if it ran under an fp16 default-dtype context during loading.
+    seq_len = int(re.max_seq_len_cached)
+    device = re.cos_cached.device
+    dim = re.dim
+    base = re.base * (re.scaling_factor if getattr(re, "mixed_b", None) is None else 1)
+    inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2, dtype=torch.float32, device=device) / dim))
+    if getattr(re, "mixed_b", None) is None:
+        inv_freq = inv_freq / (re.scaling_factor ** (2 / dim))
+    t = torch.arange(seq_len, dtype=torch.float32, device=device)
+    freqs = torch.einsum("i,j->ij", t, inv_freq)
+    emb = torch.cat((freqs, freqs), dim=-1)
+    re.register_buffer("inv_freq", inv_freq, persistent=False)
+    re.register_buffer("cos_cached", emb.cos(), persistent=False)
+    re.register_buffer("sin_cached", emb.sin(), persistent=False)
+    print(f"    [RoPE] after manual rebuild: cos.dtype={re.cos_cached.dtype}  "
+          f"cos.nan_count={int(torch.isnan(re.cos_cached).sum())}  "
+          f"freqs.max={float(freqs.abs().max()):.3g}")
 
     _diag = {"printed": False}
 
     def _safe_forward(self, x, seq_len=None):
         if seq_len is not None and seq_len > self.max_seq_len_cached:
-            self._set_cos_sin_cache(seq_len, x.device, x.dtype)
+            self._set_cos_sin_cache(seq_len, x.device, torch.float32)
         cos = self.cos_cached.to(device=x.device, dtype=x.dtype)
         sin = self.sin_cached.to(device=x.device, dtype=x.dtype)
         if not _diag["printed"]:
             print(f"    [RoPE call] x.shape={tuple(x.shape)}  x.device={x.device}  "
-                  f"seq_len={seq_len}  cos.shape={tuple(cos.shape)}  cos.device={cos.device}")
+                  f"seq_len={seq_len}  cos.shape={tuple(cos.shape)}  cos.device={cos.device}  "
+                  f"cos.nan={int(torch.isnan(cos).sum())}")
             _diag["printed"] = True
         return cos, sin
 
