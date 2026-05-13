@@ -19,8 +19,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 
-from simple import config as C
-from simple.data import load_dataframe, split_dataframe, apply_preprocess, build_pair, build_single_pair
+import config as C
+from data import load_dataframe, split_dataframe, apply_preprocess, build_pair, build_single_pair
 
 
 def _best_transformer_run():
@@ -53,10 +53,10 @@ def _load_run(run_id: str):
 
 def _instantiate_model(cfg):
     if cfg["family"] == "dual":
-        from simple.models.dual import DualEncoderScorer
+        from models.dual import DualEncoderScorer
         return DualEncoderScorer(cfg["backbone"])
     if cfg["family"] == "cross":
-        from simple.models.cross import CrossEncoderScorer
+        from models.cross import CrossEncoderScorer
         return CrossEncoderScorer(cfg["backbone"])
     raise ValueError(cfg["family"])
 

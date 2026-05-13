@@ -10,8 +10,8 @@ import torch
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
 
-from simple import config as C
-from simple.preprocess import preprocess
+import config as C
+from preprocess import preprocess
 
 
 def load_dataframe(csv_path: str = C.RAW_CSV) -> pd.DataFrame:

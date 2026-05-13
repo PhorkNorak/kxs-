@@ -7,7 +7,7 @@ interaction [e_a; e_b; |e_a-e_b|; e_a*e_b] → MLP → sigmoid scalar in [0,1].
 import torch
 import torch.nn as nn
 
-from simple import config as C
+import config as C
 
 
 class BiLSTMScorer(nn.Module):
