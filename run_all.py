@@ -244,6 +244,7 @@ def stage_transformers(only_backbones=None):
                 if _tok_sz != _emb_sz:
                     print(f"    vocab mismatch: tokenizer={_tok_sz}, model={_emb_sz} → resizing")
                     model.encoder.resize_token_embeddings(_tok_sz)
+                model.float()  # force fp32 — some models (e.g. GTE) default to fp16
                 tr_res = train_transformer(model, trl, vl, TRAIN_CFG, DEVICE, CHECKPOINT_DIR, run)
                 tl, pl, ts, ps = collect_preds(model, tel, TRAIN_CFG.loss_type)
                 m = compute_all_metrics(tl, pl, ts, ps)
