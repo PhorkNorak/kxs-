@@ -9,10 +9,26 @@ References:
     Gal & Ghahramani 2016 — MC Dropout
 """
 
+import inspect
+
 import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoConfig
 from models.losses import corn_logits_to_label, corn_logits_to_score
+
+
+def _load_encoder(model_name, config):
+    return AutoModel.from_pretrained(
+        model_name, config=config, trust_remote_code=True, dtype=torch.float32
+    )
+
+
+def _accepts_position_ids(model):
+    try:
+        params = inspect.signature(model.forward).parameters
+    except (TypeError, ValueError):
+        return False
+    return "position_ids" in params
 
 
 class DualEncoder(nn.Module):
@@ -22,9 +38,8 @@ class DualEncoder(nn.Module):
         self.loss_type = loss_type
         self.num_classes = num_classes
         config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
-        self.encoder = AutoModel.from_pretrained(
-            model_name, config=config, trust_remote_code=True, torch_dtype=torch.float32
-        )
+        self.encoder = _load_encoder(model_name, config)
+        self._uses_position_ids = _accepts_position_ids(self.encoder)
         self.hidden_dim = config.hidden_size
         if freeze_layers > 0:
             self._freeze(freeze_layers)
@@ -52,14 +67,23 @@ class DualEncoder(nn.Module):
                         p.requires_grad = False
 
     def _pool(self, hidden, mask):
-        m = mask.unsqueeze(-1).expand(hidden.size()).float()
+        m = mask.unsqueeze(-1).expand(hidden.size()).to(dtype=hidden.dtype)
         return (hidden * m).sum(1) / m.sum(1).clamp(min=1e-9)
 
     def encode(self, input_ids, attention_mask):
-        B, L = input_ids.shape
-        position_ids = torch.arange(L, device=input_ids.device).unsqueeze(0).expand(B, -1)
-        out = self.encoder(input_ids=input_ids, attention_mask=attention_mask,
-                           position_ids=position_ids, return_dict=True)
+        kwargs = {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "return_dict": True,
+        }
+        if self._uses_position_ids:
+            B, L = input_ids.shape
+            kwargs["position_ids"] = (
+                torch.arange(L, device=input_ids.device)
+                .unsqueeze(0)
+                .expand(B, -1)
+            )
+        out = self.encoder(**kwargs)
         return self._pool(out.last_hidden_state, attention_mask)
 
     def forward(self, input_ids_a, attention_mask_a, input_ids_r, attention_mask_r,
@@ -104,9 +128,7 @@ class CrossEncoder(nn.Module):
         self.loss_type = loss_type
         self.num_classes = num_classes
         config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
-        self.encoder = AutoModel.from_pretrained(
-            model_name, config=config, trust_remote_code=True, torch_dtype=torch.float32
-        )
+        self.encoder = _load_encoder(model_name, config)
         self.hidden_dim = config.hidden_size
         out = (num_classes - 1) if loss_type == "corn" else 1
         self.head = nn.Sequential(
