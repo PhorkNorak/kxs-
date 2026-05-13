@@ -17,7 +17,7 @@ from models.losses import corn_logits_to_label, corn_logits_to_score
 
 def _load_encoder(model_name, config):
     return AutoModel.from_pretrained(
-        model_name, config=config, trust_remote_code=True, dtype=torch.float32
+        model_name, config=config, trust_remote_code=True, torch_dtype=torch.float32
     )
 
 
