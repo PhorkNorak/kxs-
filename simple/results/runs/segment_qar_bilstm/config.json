@@ -1,0 +1,8 @@
+{
+  "run_id": "segment_qar_bilstm",
+  "model": "bilstm",
+  "family": "bilstm",
+  "preprocess": "segment",
+  "input": "qar",
+  "vocab_size": 99
+}

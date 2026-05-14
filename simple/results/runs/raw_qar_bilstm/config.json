@@ -1,0 +1,8 @@
+{
+  "run_id": "raw_qar_bilstm",
+  "model": "bilstm",
+  "family": "bilstm",
+  "preprocess": "raw",
+  "input": "qar",
+  "vocab_size": 121
+}

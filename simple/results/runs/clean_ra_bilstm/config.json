@@ -1,0 +1,8 @@
+{
+  "run_id": "clean_ra_bilstm",
+  "model": "bilstm",
+  "family": "bilstm",
+  "preprocess": "clean",
+  "input": "ra",
+  "vocab_size": 100
+}

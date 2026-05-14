@@ -1,0 +1,7 @@
+{
+  "run_id": "clean_ra_fasttext_cos",
+  "model": "fasttext_cos",
+  "family": "classical",
+  "preprocess": "clean",
+  "input": "ra"
+}
