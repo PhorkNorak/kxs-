@@ -12,7 +12,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVR
 from sklearn.metrics.pairwise import cosine_similarity
 
-from simple import config as C
+import config as C
 
 
 def _cosine_rowwise(a, b):

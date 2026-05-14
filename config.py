@@ -1,113 +1,76 @@
-"""
-KhmerXScore Configuration
-=========================
-All hyperparameters, paths, and experimental settings.
-"""
+"""Simple-pipeline config — single source of truth for paths, models, hparams."""
 
 import os
-from dataclasses import dataclass, field
-from typing import List
+import torch
 
-# ── Paths ────────────────────────────────────────────────────
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR     = os.path.join(PROJECT_ROOT, "data")
-RAW_CSV      = os.path.join(DATA_DIR, "dataset.csv")
-PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
-RESULTS_DIR  = os.path.join(PROJECT_ROOT, "results")
-CHECKPOINT_DIR = os.path.join(PROJECT_ROOT, "checkpoints")
+PROJECT_ROOT  = os.path.dirname(os.path.abspath(__file__))
+RAW_CSV       = os.path.join(PROJECT_ROOT, "data", "dataset.csv")
+RESULTS_DIR   = os.path.join(PROJECT_ROOT, "results")
+RUNS_DIR      = os.path.join(RESULTS_DIR, "runs")
+LEADERBOARD   = os.path.join(RESULTS_DIR, "leaderboard.csv")
+XAI_DIR       = os.path.join(PROJECT_ROOT, "xai_visuals")
 
-for d in [PROCESSED_DIR, RESULTS_DIR, CHECKPOINT_DIR]:
+for d in [RESULTS_DIR, RUNS_DIR, XAI_DIR]:
     os.makedirs(d, exist_ok=True)
 
-# ── Data ─────────────────────────────────────────────────────
-SPLIT_SEED = 42
-TRAIN_RATIO, VAL_RATIO, TEST_RATIO = 0.70, 0.15, 0.15
-NUM_SCORE_CLASSES = 5   # 0, 1, 2, 3, 4
+# Grid axes
+PREPROC_MODES = ["raw", "clean", "segment"]
+INPUT_FORMATS = ["ra", "qar"]
 
-# ── Preprocessing ablation modes ────────────────────────────
-PREPROC_RAW      = "raw"
-PREPROC_KCC      = "kcc"
-PREPROC_KCC_SEG  = "kcc_seg"
-PREPROC_FULL     = "kcc_seg_punct"
-PREPROC_MODES    = [PREPROC_RAW, PREPROC_KCC, PREPROC_KCC_SEG, PREPROC_FULL]
-
-# ── Input format ablation ────────────────────────────────────
-INPUT_AR  = "ar"     # (Answer, Reference) only
-INPUT_QAR = "qar"    # (Question, Answer, Reference)
-INPUT_FORMATS = [INPUT_AR, INPUT_QAR]
-
-# ── Transformer backbones ────────────────────────────────────
 TRANSFORMER_BACKBONES = {
-    "mbert":      "bert-base-multilingual-cased",
-    "xlmr":       "xlm-roberta-base",
-    "gte":        "Alibaba-NLP/gte-multilingual-base",
+    "mbert": "bert-base-multilingual-cased",
+    "xlmr":  "xlm-roberta-base",
+    "gte":   "Alibaba-NLP/gte-multilingual-base",
 }
-PROPOSED_BACKBONE = "xlmr"   # KX-CL headline model
 
-# ── Training hyperparameters ─────────────────────────────────
-@dataclass
-class TrainConfig:
-    lr: float = 2e-5
-    batch_size: int = 16
-    max_epochs: int = 30
-    early_stop_patience: int = 5
-    weight_decay: float = 0.01
-    warmup_ratio: float = 0.10
-    dropout: float = 0.2
-    max_seq_len: int = 256
-    freeze_layers: int = 6
-    num_seeds: int = 3
-    seeds: List[int] = field(default_factory=lambda: [42, 1337, 2024])
-    # MC Dropout
-    mc_dropout_T: int = 10
-    # SCL
-    scl_alpha: float = 1.0
-    scl_beta: float = 0.5
-    scl_temperature: float = 0.07
-    scl_margin_scale: float = 1.0
-    # Class-balanced sampling
-    use_class_balanced: bool = True
-    # Loss: "mse", "weighted_mse", "corn"
-    loss_type: str = "corn"
-    # Class-imbalance: inverse-frequency weighting inside CORN sub-tasks
-    corn_class_weighted: bool = True
-    # Label smoothing for CORN binary targets (0.0 = off)
-    corn_epsilon: float = 0.05
+# Model registry: (model_id, family, backbone_or_None)
+MODELS = [
+    ("tfidf_cos",    "classical", None),
+    ("tfidf_svr",    "classical", None),
+    ("fasttext_cos", "classical", None),
+    ("bilstm",       "bilstm",    None),
+    ("dual_mbert",   "dual",      "mbert"),
+    ("dual_xlmr",    "dual",      "xlmr"),
+    ("dual_gte",     "dual",      "gte"),
+    ("cross_mbert",  "cross",     "mbert"),
+    ("cross_xlmr",   "cross",     "xlmr"),
+    ("cross_gte",    "cross",     "gte"),
+]
 
-TRAIN_CFG = TrainConfig()
+# Hyperparameters
+SEED        = 42
+TRAIN_RATIO = 0.70
+VAL_RATIO   = 0.15
+TEST_RATIO  = 0.15
 
-# Post-training QWK threshold calibration (val-set optimised bin boundaries)
-CALIBRATE_THRESHOLDS: bool = True
+# Classical
+TFIDF_NGRAMS   = (2, 4)
+TFIDF_ANALYZER = "char_wb"
+TFIDF_MAX_FEAT = 15000
+SVR_C          = 1.0
+FASTTEXT_DIM   = 100
+FASTTEXT_EPOCHS = 10
 
-# ── BiLSTM-specific config ───────────────────────────────────
-@dataclass
-class BiLSTMConfig:
-    embed_dim: int = 128
-    hidden_dim: int = 128
-    num_layers: int = 2
-    dropout: float = 0.3
-    max_seq_len: int = 256
-    batch_size: int = 64
-    lr: float = 1e-3
-    max_epochs: int = 30
-    early_stop_patience: int = 5
-    max_vocab: int = 5000
-    scl_beta: float = 0.5
+# BiLSTM
+BILSTM_HIDDEN  = 128
+BILSTM_LAYERS  = 2
+BILSTM_EMBED   = 128
+BILSTM_VOCAB   = 5000
+BILSTM_LR      = 1e-3
+BILSTM_BATCH   = 64
+BILSTM_MAX_EP  = 20
+BILSTM_PATIENCE = 4
+BILSTM_DROPOUT = 0.3
 
-BILSTM_CFG = BiLSTMConfig()
+# Transformer
+TXFMR_LR        = 2e-5
+TXFMR_BATCH     = 16
+TXFMR_MAX_EP    = 20
+TXFMR_PATIENCE  = 4
+TXFMR_DROPOUT   = 0.2
+TXFMR_MAX_LEN   = 256
+TXFMR_FREEZE_N  = 6
+TXFMR_WEIGHT_DECAY = 0.01
 
-# ── Evaluation ───────────────────────────────────────────────
-DEPLOYMENT_QWK_THRESHOLD = 0.70
-BOOTSTRAP_N = 1000
-BOOTSTRAP_CI = 0.95
-SIGNIFICANCE_ALPHA = 0.05
-
-# ── XAI ──────────────────────────────────────────────────────
-SHAP_N_SAMPLES = 50
-IG_N_STEPS = 50
-FAITHFULNESS_TOP_K = [5, 10, 15, 20]
-
-# ── Hardware ─────────────────────────────────────────────────
-import torch as _torch
-DEVICE = "cuda" if _torch.cuda.is_available() else "cpu"
-NUM_WORKERS = 0    # Set to 4+ on HPC
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+NUM_SCORE_CLASSES = 5

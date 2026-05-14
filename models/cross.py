@@ -9,8 +9,8 @@ import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoConfig
 
-from simple import config as C
-from simple.models.dual import _patch_rope
+import config as C
+from models.dual import _patch_rope
 
 
 class CrossEncoderScorer(nn.Module):

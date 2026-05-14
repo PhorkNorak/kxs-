@@ -1,13 +1,13 @@
-"""
-Khmer Text Preprocessing Pipeline
-- KCC Character Cluster normalization (syllable-boundary aware)
-- Optional khmernltk word segmentation
-- Optional punctuation stripping
-- No spellcheck (pedagogically motivated: teachers deduct for spelling)
+"""Three preprocessing modes for Khmer short answers.
+
+raw      → strip whitespace only
+clean    → KCC normalize + strip punctuation
+segment  → clean + khmernltk.word_tokenize
 """
 
 import re
 import unicodedata
+
 
 KHMER_CONSONANTS = set(range(0x1780, 0x17A3))
 KHMER_DEPENDENT_VOWELS = set(range(0x17B6, 0x17C6))
@@ -43,7 +43,8 @@ def kcc_normalize(text: str) -> str:
             if cp in KHMER_CONSONANTS and not coengs and not vowels and not signs:
                 bases.append(cluster[i])
             elif cp == KHMER_COENG and i + 1 < len(cluster):
-                coengs += [cluster[i], cluster[i + 1]]; i += 1
+                coengs += [cluster[i], cluster[i + 1]]
+                i += 1
             elif cp in KHMER_DEPENDENT_VOWELS:
                 vowels.append(cluster[i])
             elif cp in KHMER_SIGNS:
@@ -77,21 +78,15 @@ def segment_khmer(text: str) -> str:
         return text
 
 
-def preprocess(text: str, mode: str = "kcc_seg_punct") -> str:
-    """
-    Modes: raw | kcc | kcc_seg | kcc_seg_punct
-    No spellcheck (teachers deduct marks for spelling errors).
-    """
+def preprocess(text: str, mode: str) -> str:
     if not text or not isinstance(text, str):
         return ""
     text = text.strip()
     if mode == "raw":
         return text
-    text = kcc_normalize(text)
-    if mode == "kcc":
+    text = strip_punctuation(kcc_normalize(text))
+    if mode == "clean":
         return text
-    if mode == "kcc_seg_punct":
-        text = strip_punctuation(text)
-    if mode in ("kcc_seg", "kcc_seg_punct"):
-        text = segment_khmer(text)
-    return text
+    if mode == "segment":
+        return segment_khmer(text)
+    raise ValueError(f"Unknown preprocess mode: {mode}")
