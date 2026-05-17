@@ -36,7 +36,8 @@ for p in (_ROOT, _HERE):
 
 from _common import (  # noqa: E402
     DATASETS, select_datasets, patch_config, reset_leaderboard, append_row,
-    row_from_metrics, banner, add_datasets_flag,
+    row_from_metrics, banner, add_datasets_flag, add_resume_flag,
+    cell_already_done, backfill_leaderboard_row_from_metrics,
 )
 
 import config  # noqa: E402
@@ -54,6 +55,7 @@ def main():
     import argparse
     ap = argparse.ArgumentParser()
     add_datasets_flag(ap)
+    add_resume_flag(ap)
     args = ap.parse_args()
 
     for ds in select_datasets(args.datasets):
@@ -61,9 +63,10 @@ def main():
                            exp_suffix="v06_transformer")
         importlib.reload(data)
         importlib.reload(train)
-        banner(f"exp06 transformer  {ds['label']}", dst)
+        banner(f"exp06 transformer  {ds['label']}  resume={args.resume}", dst)
 
-        reset_leaderboard()
+        if not args.resume:
+            reset_leaderboard()
         df = data.load_dataframe()
         train_df, val_df, test_df = data.split_dataframe(df)
         print(f"  rows={len(df)} train={len(train_df)} val={len(val_df)} test={len(test_df)}")
@@ -73,6 +76,13 @@ def main():
                 for arch in ARCHS:
                     for bb in BACKBONES:
                         run_id = f"{prep}_{inp}_{arch}_{bb}"
+                        if args.resume and cell_already_done(run_id):
+                            backfill_leaderboard_row_from_metrics(
+                                run_id, prep, inp,
+                                model_id=f"{arch}_{bb}", family=arch,
+                            )
+                            print(f"  [{run_id:35s}] SKIP (already done)")
+                            continue
                         t0 = time.time()
                         try:
                             result = train.train_transformer(

@@ -108,6 +108,64 @@ def add_datasets_flag(parser):
     )
 
 
+def add_resume_flag(parser):
+    """Add a --resume argument that skips cells already trained.
+
+    When --resume is set:
+      * the leaderboard CSV is NOT reset before iteration
+      * any cell whose runs/<run_id>/metrics.json already exists is skipped
+      * if a leaderboard row is missing for a skipped cell, it is reconstructed
+        from metrics.json so the leaderboard ends up complete
+    """
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="Skip cells whose metrics.json already exists; don't wipe leaderboard.",
+    )
+
+
+def cell_already_done(run_id: str) -> bool:
+    """True if runs/<run_id>/metrics.json exists (read from current config.RUNS_DIR)."""
+    return os.path.exists(os.path.join(config.RUNS_DIR, run_id, "metrics.json"))
+
+
+def existing_leaderboard_runs() -> set:
+    """Return the set of run_ids already present in the current leaderboard CSV."""
+    if not os.path.exists(config.LEADERBOARD):
+        return set()
+    try:
+        import csv as _csv
+        with open(config.LEADERBOARD, encoding="utf-8") as f:
+            r = _csv.DictReader(f)
+            return {row["run_id"] for row in r if row.get("run_id")}
+    except Exception:
+        return set()
+
+
+def backfill_leaderboard_row_from_metrics(run_id: str, prep: str, inp: str,
+                                          model_id: str, family: str) -> bool:
+    """If metrics.json exists for run_id but the row is missing from the
+    leaderboard, reconstruct and append the row. Returns True if appended."""
+    import json as _json
+    metrics_path = os.path.join(config.RUNS_DIR, run_id, "metrics.json")
+    if not os.path.exists(metrics_path):
+        return False
+    if run_id in existing_leaderboard_runs():
+        return False  # already there
+    try:
+        m = _json.load(open(metrics_path, encoding="utf-8"))
+    except Exception:
+        return False
+    row = row_from_metrics(
+        run_id=run_id, prep=prep, inp=inp,
+        model_id=model_id, family=family,
+        train_m=m.get("train", {}), val_m=m.get("val", {}), test_m=m.get("test", {}),
+        best_epoch=m.get("best_epoch", ""),
+        seconds=0.0,
+    )
+    append_row(row)
+    return True
+
+
 def reset_leaderboard():
     if os.path.exists(config.LEADERBOARD):
         os.remove(config.LEADERBOARD)

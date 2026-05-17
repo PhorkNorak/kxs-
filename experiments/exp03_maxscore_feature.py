@@ -28,7 +28,8 @@ for p in (_ROOT, _HERE):
 
 from _common import (  # noqa: E402
     DATASETS, select_datasets, patch_config, reset_leaderboard, append_row,
-    row_from_metrics, banner, add_datasets_flag,
+    row_from_metrics, banner, add_datasets_flag, add_resume_flag,
+    cell_already_done, backfill_leaderboard_row_from_metrics,
 )
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -123,15 +124,17 @@ def main():
     import argparse
     ap = argparse.ArgumentParser()
     add_datasets_flag(ap)
+    add_resume_flag(ap)
     args = ap.parse_args()
 
     for ds in select_datasets(args.datasets):
         dst = patch_config(ds["run_name"], ds["drop_zero"],
                            exp_suffix="v03_maxfeat")
         importlib.reload(data)  # data.py reads C.DROP_SCORE_ZERO
-        banner(f"exp03 maxfeat-SVR  {ds['label']}", dst)
+        banner(f"exp03 maxfeat-SVR  {ds['label']}  resume={args.resume}", dst)
 
-        reset_leaderboard()
+        if not args.resume:
+            reset_leaderboard()
         df = data.load_dataframe()
         train_df, val_df, test_df = data.split_dataframe(df)
         print(f"  rows={len(df)} train={len(train_df)} val={len(val_df)} test={len(test_df)}")
@@ -139,6 +142,13 @@ def main():
         for prep in PREPROCESS:
             for inp in INPUTS:
                 run_id = f"{prep}_{inp}_tfidf_svr_maxfeat"
+                if args.resume and cell_already_done(run_id):
+                    backfill_leaderboard_row_from_metrics(
+                        run_id, prep, inp,
+                        model_id="tfidf_svr_maxfeat", family="classical_v03",
+                    )
+                    print(f"  [{run_id:35s}] SKIP (already done)")
+                    continue
                 t0 = time.time()
                 try:
                     r = train_one_cell(prep, inp, train_df, val_df, test_df, run_id)

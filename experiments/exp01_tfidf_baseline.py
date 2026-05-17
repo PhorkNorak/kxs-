@@ -27,7 +27,8 @@ for p in (_ROOT, _HERE):
 
 from _common import (  # noqa: E402
     DATASETS, select_datasets, patch_config, reset_leaderboard, append_row,
-    row_from_metrics, banner, add_datasets_flag,
+    row_from_metrics, banner, add_datasets_flag, add_resume_flag,
+    cell_already_done, backfill_leaderboard_row_from_metrics,
 )
 
 import config  # noqa: E402
@@ -43,6 +44,7 @@ INPUTS       = ["ra", "qar"]
 def main():
     ap = argparse.ArgumentParser()
     add_datasets_flag(ap)
+    add_resume_flag(ap)
     args = ap.parse_args()
 
     for ds in select_datasets(args.datasets):
@@ -51,9 +53,10 @@ def main():
                            raw_csv=ds["raw_csv"])
         importlib.reload(data)
         importlib.reload(train)
-        banner(f"exp01 TF-IDF baseline  {ds['label']}", dst)
+        banner(f"exp01 TF-IDF baseline  {ds['label']}  resume={args.resume}", dst)
 
-        reset_leaderboard()
+        if not args.resume:
+            reset_leaderboard()
         df = data.load_dataframe()
         train_df, val_df, test_df = data.split_dataframe(df)
         print(f"  rows={len(df)} train={len(train_df)} val={len(val_df)} test={len(test_df)}")
@@ -63,6 +66,12 @@ def main():
             for inp in INPUTS:
                 for model_id in TFIDF_MODELS:
                     run_id = f"{prep}_{inp}_{model_id}"
+                    if args.resume and cell_already_done(run_id):
+                        backfill_leaderboard_row_from_metrics(
+                            run_id, prep, inp, model_id=model_id, family="classical",
+                        )
+                        print(f"  [{run_id:30s}] SKIP (already done)")
+                        continue
                     t0 = time.time()
                     try:
                         result = train.train_classical(

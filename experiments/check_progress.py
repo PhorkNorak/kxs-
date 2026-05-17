@@ -31,31 +31,31 @@ for p in (_ROOT, _HERE):
 from _common import DATASETS  # noqa: E402
 
 
-# (key, dir_suffix, expected_cells_per_dataset, resume_command_template)
-# resume_command_template uses {ds_args} which gets replaced with --datasets X Y
+# (key, dir_suffix, expected_cells_per_dataset, resume_command_template, supports_resume)
+# resume_command_template uses {ds_args} for --datasets and {resume_arg} for --resume
 EXPECTED = [
     ("v01_baseline",                    "",                                  12,
-     "python -u experiments/exp01_tfidf_baseline.py {ds_args}"),
+     "python -u experiments/exp01_tfidf_baseline.py {ds_args} {resume_arg}", True),
     ("v02_calibrated",                  "v02_calibrated",                    12,
-     "python -u experiments/exp02_threshold_calibration.py {ds_args}"),
+     "python -u experiments/exp02_threshold_calibration.py {ds_args}", False),
     ("v03_maxfeat",                     "v03_maxfeat",                        6,
-     "python -u experiments/exp03_maxscore_feature.py {ds_args}"),
+     "python -u experiments/exp03_maxscore_feature.py {ds_args} {resume_arg}", True),
     ("v04_bucket",                      "v04_bucket",                         6,
-     "python -u experiments/exp04_bucket_svr.py {ds_args}"),
+     "python -u experiments/exp04_bucket_svr.py {ds_args} {resume_arg}", True),
     ("v05_bilstm",                      "v05_bilstm",                         6,
-     "python -u experiments/exp05_bilstm.py {ds_args}"),
+     "python -u experiments/exp05_bilstm.py {ds_args} {resume_arg}", True),
     ("v06_transformer",                 "v06_transformer",                   36,
-     "python -u experiments/exp06_transformer.py {ds_args}"),
+     "python -u experiments/exp06_transformer.py {ds_args} {resume_arg}", True),
     ("v03b_maxfeat_neural",             "v03b_maxfeat_neural",               42,
-     "python -u experiments/exp03b_maxfeat_neural.py {ds_args}"),
+     "python -u experiments/exp03b_maxfeat_neural.py {ds_args} {resume_arg}", True),
     ("v05_bilstm_calibrated",           "v05_bilstm_calibrated",              6,
-     "python -u experiments/exp02_threshold_calibration.py --source v05_bilstm {ds_args}"),
+     "python -u experiments/exp02_threshold_calibration.py --source v05_bilstm {ds_args}", False),
     ("v06_transformer_calibrated",      "v06_transformer_calibrated",        36,
-     "python -u experiments/exp02_threshold_calibration.py --source v06_transformer {ds_args}"),
+     "python -u experiments/exp02_threshold_calibration.py --source v06_transformer {ds_args}", False),
     ("v03b_maxfeat_neural_calibrated",  "v03b_maxfeat_neural_calibrated",    42,
-     "python -u experiments/exp02_threshold_calibration.py --source v03b_maxfeat_neural {ds_args}"),
+     "python -u experiments/exp02_threshold_calibration.py --source v03b_maxfeat_neural {ds_args}", False),
     ("v07_ensemble",                    "v07_ensemble",                       1,
-     "python -u experiments/exp07_ensemble.py {ds_args}"),
+     "python -u experiments/exp07_ensemble.py {ds_args}", False),
 ]
 
 
@@ -88,9 +88,10 @@ def main():
     args = ap.parse_args()
 
     missing_per_exp = {}  # exp_key -> [ds_run_name, ...]
+    partial_per_exp = set()  # exp_keys that have at least one PARTIAL ds
     rows = []
     total_done = total_expected = 0
-    for exp_key, suffix, expected, _cmd in EXPECTED:
+    for exp_key, suffix, expected, _cmd, _resume_ok in EXPECTED:
         for ds in DATASETS:
             status, n = check_cell(ds["run_name"], suffix, expected)
             rows.append((exp_key, ds["run_name"], status, n, expected))
@@ -99,6 +100,8 @@ def main():
                 total_done += expected
             else:
                 missing_per_exp.setdefault(exp_key, []).append(ds["run_name"])
+                if status == "PARTIAL":
+                    partial_per_exp.add(exp_key)
 
     if not args.quiet:
         print(f"\n{'experiment':<35s} {'dataset':<12s} {'status':<10s} {'rows':>10s}")
@@ -120,7 +123,7 @@ def main():
     # at the end if anything else is being re-run, because v07 depends on
     # upstream predictions that may have just changed.
     lines = []
-    for exp_key, suffix, expected, cmd_template in EXPECTED:
+    for exp_key, suffix, expected, cmd_template, supports_resume in EXPECTED:
         if exp_key == "v07_ensemble":
             continue  # handled separately below
         if exp_key not in missing_per_exp:
@@ -130,7 +133,9 @@ def main():
             ds_args = ""
         else:
             ds_args = "--datasets " + " ".join(miss)
-        line = cmd_template.format(ds_args=ds_args).strip()
+        # Add --resume on training scripts so partial runs aren't redone.
+        resume_arg = "--resume" if (supports_resume and exp_key in partial_per_exp) else ""
+        line = cmd_template.format(ds_args=ds_args, resume_arg=resume_arg).strip()
         while "  " in line:
             line = line.replace("  ", " ")
         lines.append(line)

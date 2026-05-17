@@ -30,7 +30,8 @@ for p in (_ROOT, _HERE):
 
 from _common import (  # noqa: E402
     DATASETS, select_datasets, patch_config, reset_leaderboard, append_row,
-    row_from_metrics, banner, add_datasets_flag,
+    row_from_metrics, banner, add_datasets_flag, add_resume_flag,
+    cell_already_done, backfill_leaderboard_row_from_metrics,
 )
 
 import config  # noqa: E402
@@ -52,6 +53,7 @@ def main():
     ap.add_argument("--skip-transformer", action="store_true",
                     help="Skip transformer cells (e.g. CPU-only run, BiLSTM only)")
     add_datasets_flag(ap)
+    add_resume_flag(ap)
     args = ap.parse_args()
 
     for ds in select_datasets(args.datasets):
@@ -59,9 +61,10 @@ def main():
                            exp_suffix="v03b_maxfeat_neural")
         importlib.reload(data)
         importlib.reload(train)
-        banner(f"exp03b max-feat neural  {ds['label']}", dst)
+        banner(f"exp03b max-feat neural  {ds['label']}  resume={args.resume}", dst)
 
-        reset_leaderboard()
+        if not args.resume:
+            reset_leaderboard()
         df = data.load_dataframe()
         train_df, val_df, test_df = data.split_dataframe(df)
         print(f"  rows={len(df)} train={len(train_df)} val={len(val_df)} test={len(test_df)}")
@@ -71,6 +74,13 @@ def main():
             for prep in PREPROCESS:
                 for inp in INPUTS:
                     run_id = f"{prep}_{inp}_bilstm_maxfeat"
+                    if args.resume and cell_already_done(run_id):
+                        backfill_leaderboard_row_from_metrics(
+                            run_id, prep, inp,
+                            model_id="bilstm_maxfeat", family="bilstm_maxfeat",
+                        )
+                        print(f"  [{run_id:35s}] SKIP (already done)")
+                        continue
                     t0 = time.time()
                     try:
                         result = train.train_bilstm(
@@ -104,6 +114,14 @@ def main():
                     for arch in ARCHS:
                         for bb in BACKBONES:
                             run_id = f"{prep}_{inp}_{arch}_{bb}_maxfeat"
+                            if args.resume and cell_already_done(run_id):
+                                backfill_leaderboard_row_from_metrics(
+                                    run_id, prep, inp,
+                                    model_id=f"{arch}_{bb}_maxfeat",
+                                    family=f"{arch}_maxfeat",
+                                )
+                                print(f"  [{run_id:40s}] SKIP (already done)")
+                                continue
                             t0 = time.time()
                             try:
                                 result = train.train_transformer(

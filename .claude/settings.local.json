@@ -68,7 +68,8 @@
       "Bash(python experiments/exp07_ensemble.py --datasets full)",
       "Bash(python experiments/compare_all.py --topk 5)",
       "Bash(python experiments/check_progress.py)",
-      "Bash(python experiments/check_progress.py --quiet)"
+      "Bash(python experiments/check_progress.py --quiet)",
+      "Bash(python experiments/exp01_tfidf_baseline.py --datasets no10c_no0 --resume)"
     ]
   }
 }
