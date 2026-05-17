@@ -1,0 +1,43 @@
+{
+  "run_id": "clean_qar_tfidf_svr_bucket",
+  "model": "tfidf_svr_bucket",
+  "family": "classical_v04",
+  "preprocess": "clean",
+  "input": "qar",
+  "experiment": "v04_bucket_svr",
+  "min_bucket_size": 40,
+  "bucket_info": {
+    "5": {
+      "n_train": 91,
+      "uses": "bucket_specific"
+    },
+    "6": {
+      "n_train": 32,
+      "uses": "global_fallback"
+    },
+    "7": {
+      "n_train": 37,
+      "uses": "global_fallback"
+    },
+    "8": {
+      "n_train": 104,
+      "uses": "bucket_specific"
+    },
+    "10": {
+      "n_train": 284,
+      "uses": "bucket_specific"
+    },
+    "12": {
+      "n_train": 42,
+      "uses": "bucket_specific"
+    },
+    "15": {
+      "n_train": 212,
+      "uses": "bucket_specific"
+    },
+    "20": {
+      "n_train": 26,
+      "uses": "global_fallback"
+    }
+  }
+}

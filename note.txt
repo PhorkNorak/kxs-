@@ -1,0 +1,1 @@
+experiment drop 10c biology since the has a lot of bias in the answer and score. so dataset no 10c biology has only 911 row.

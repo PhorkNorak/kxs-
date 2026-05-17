@@ -1,0 +1,7 @@
+{
+  "run_id": "segment_qar_tfidf_cos",
+  "model": "tfidf_cos",
+  "family": "classical",
+  "preprocess": "segment",
+  "input": "qar"
+}

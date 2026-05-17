@@ -1,0 +1,14 @@
+{
+  "run_id": "raw_ra_tfidf_cos",
+  "model": "tfidf_cos",
+  "family": "classical",
+  "preprocess": "raw",
+  "input": "ra",
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.01,
+    0.29000000000000004,
+    0.43,
+    0.76
+  ]
+}

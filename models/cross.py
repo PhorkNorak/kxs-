@@ -14,13 +14,17 @@ from models.dual import _patch_rope
 
 
 class CrossEncoderScorer(nn.Module):
+    """Transformer cross encoder with optional max-score scalar input (v03b)."""
+
     def __init__(
         self,
         backbone_name: str,
         dropout: float = C.TXFMR_DROPOUT,
         freeze_layers: int = C.TXFMR_FREEZE_N,
+        max_feat_dim: int = 0,
     ):
         super().__init__()
+        self.max_feat_dim = max_feat_dim
         cfg = AutoConfig.from_pretrained(backbone_name, trust_remote_code=True)
         self.encoder = AutoModel.from_pretrained(
             backbone_name, config=cfg, trust_remote_code=True, torch_dtype=torch.float32
@@ -29,9 +33,10 @@ class CrossEncoderScorer(nn.Module):
         _patch_rope(self.encoder)
         if freeze_layers > 0:
             self._freeze(freeze_layers)
+        head_in = self.hidden_dim + max_feat_dim
         self.head = nn.Sequential(
             nn.Dropout(dropout),
-            nn.Linear(self.hidden_dim, 256),
+            nn.Linear(head_in, 256),
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(256, 1),
@@ -50,7 +55,7 @@ class CrossEncoderScorer(nn.Module):
                     for p in layer.parameters():
                         p.requires_grad = False
 
-    def forward(self, input_ids, attention_mask):
+    def forward(self, input_ids, attention_mask, max_score_feat=None):
         bs, sl = input_ids.shape
         position_ids = (
             torch.arange(sl, device=input_ids.device, dtype=torch.long)
@@ -64,4 +69,7 @@ class CrossEncoderScorer(nn.Module):
             return_dict=True,
         )
         cls = out.last_hidden_state[:, 0, :]
+        if self.max_feat_dim > 0:
+            assert max_score_feat is not None, "max_score_feat required when max_feat_dim>0"
+            cls = torch.cat([cls, max_score_feat], dim=1)
         return self.head(cls).squeeze(-1)

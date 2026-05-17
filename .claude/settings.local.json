@@ -44,7 +44,29 @@
       "Bash(python -c \"import pandas as pd; df = pd.read_csv\\('simple/data/dataset.csv', encoding='utf-8-sig'\\); print\\('rows:', len\\(df\\)\\); print\\('cols:', list\\(df.columns\\)\\); print\\(df.head\\(2\\)\\)\")",
       "Bash(python -m simple.run_all --only segment_ra_tfidf_svr --skip-xai)",
       "Bash(ls simple/results/)",
-      "Bash(ls simple/results/runs/)"
+      "Bash(ls simple/results/runs/)",
+      "Bash(mv results *)",
+      "Bash(mkdir -p results/runs)",
+      "Bash(python run_all.py --only segment_ra_tfidf_svr --skip-xai)",
+      "Bash(python run_all.py)",
+      "Bash(rm -rf results_no10c)",
+      "Bash(mkdir -p results_no10c/runs results_no10c_no0/runs)",
+      "Bash(python run_tfidf_3datasets.py)",
+      "Bash(python analyze_run.py results_no10c clean_ra_tfidf_svr --save --worst 5)",
+      "Bash(python analyze_run.py results_no10c_no0 segment_qar_tfidf_svr --save --worst 5)",
+      "Bash(python experiments/exp02_threshold_calibration.py)",
+      "Bash(python experiments/exp03_maxscore_feature.py)",
+      "Bash(python experiments/exp04_bucket_svr.py)",
+      "Bash(python experiments/exp05_bilstm.py)",
+      "Bash(python experiments/exp07_ensemble.py)",
+      "Bash(python experiments/compare_all.py --topk 8)",
+      "Bash(python experiments/exp02_threshold_calibration.py --source \"\")",
+      "Bash(python experiments/exp01_tfidf_baseline.py --datasets full)",
+      "Bash(python experiments/exp02_threshold_calibration.py --datasets full)",
+      "Bash(python experiments/exp03_maxscore_feature.py --datasets full)",
+      "Bash(python experiments/exp04_bucket_svr.py --datasets full)",
+      "Bash(python experiments/exp07_ensemble.py --datasets full)",
+      "Bash(python experiments/compare_all.py --topk 5)"
     ]
   }
 }

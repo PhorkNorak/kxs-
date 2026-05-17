@@ -1,0 +1,40 @@
+{
+  "run_id": "ensemble_top3",
+  "model": "ensemble",
+  "family": "ensemble_v07",
+  "preprocess": "mixed",
+  "input": "mixed",
+  "experiment": "v07_ensemble",
+  "top_k": 3,
+  "weights": [
+    0.33600531189345456,
+    0.3319973440532727,
+    0.3319973440532727
+  ],
+  "calibrated_cuts": [
+    0.125,
+    0.48000000000000004,
+    0.625,
+    0.72
+  ],
+  "chosen": [
+    {
+      "experiment": "v04_bucket",
+      "run_id": "segment_qar_tfidf_svr_bucket",
+      "val_qwk": 0.8524,
+      "test_qwk": 0.7959
+    },
+    {
+      "experiment": "v03_maxfeat",
+      "run_id": "segment_ra_tfidf_svr_maxfeat",
+      "val_qwk": 0.8518,
+      "test_qwk": 0.8141
+    },
+    {
+      "experiment": "v01_baseline",
+      "run_id": "segment_ra_tfidf_svr",
+      "val_qwk": 0.8518,
+      "test_qwk": 0.801
+    }
+  ]
+}

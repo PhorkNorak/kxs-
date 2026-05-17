@@ -1,0 +1,14 @@
+{
+  "run_id": "segment_ra_tfidf_svr",
+  "model": "tfidf_svr",
+  "family": "classical",
+  "preprocess": "segment",
+  "input": "ra",
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.125,
+    0.5,
+    0.625,
+    0.7000000000000001
+  ]
+}

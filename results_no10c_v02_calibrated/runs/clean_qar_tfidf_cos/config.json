@@ -1,0 +1,14 @@
+{
+  "run_id": "clean_qar_tfidf_cos",
+  "model": "tfidf_cos",
+  "family": "classical",
+  "preprocess": "clean",
+  "input": "qar",
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.01,
+    0.3,
+    0.5,
+    0.75
+  ]
+}

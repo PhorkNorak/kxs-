@@ -29,7 +29,12 @@ from train import (
 
 LEADERBOARD_HEADER = [
     "run_id", "preprocess", "input", "model", "family",
+    # ===== TRAIN-set metrics (for overfit-gap reporting, like Alaoui et al. 2024) =====
+    "train_qwk", "train_accuracy", "train_adjacent_accuracy", "train_mae",
+    "train_raw_exact", "train_raw_within1", "train_raw_mae", "train_pct_mae",
+    # ===== TEST-set metrics (primary deployment numbers) =====
     "test_qwk", "test_accuracy", "test_adjacent_accuracy", "test_mae",
+    "test_raw_exact", "test_raw_within1", "test_raw_mae", "test_pct_mae",
     "val_qwk", "best_epoch", "seconds",
 ]
 
@@ -97,22 +102,37 @@ def main():
             dt = time.time() - t0
             test_m = result["test"]
             val_m = result["val"]
+            train_m = result.get("train", {})
             row = {
                 "run_id": run_id,
                 "preprocess": prep,
                 "input": inp,
                 "model": model_id,
                 "family": family,
+                "train_qwk": f"{train_m.get('qwk', float('nan')):.4f}",
+                "train_accuracy": f"{train_m.get('accuracy', float('nan')):.4f}",
+                "train_adjacent_accuracy": f"{train_m.get('adjacent_accuracy', float('nan')):.4f}",
+                "train_mae": f"{train_m.get('mae', float('nan')):.4f}",
+                "train_raw_exact":   f"{train_m.get('raw_exact', float('nan')):.4f}",
+                "train_raw_within1": f"{train_m.get('raw_within1', float('nan')):.4f}",
+                "train_raw_mae":     f"{train_m.get('raw_mae', float('nan')):.4f}",
+                "train_pct_mae":     f"{train_m.get('pct_mae', float('nan')):.4f}",
                 "test_qwk": f"{test_m['qwk']:.4f}",
                 "test_accuracy": f"{test_m['accuracy']:.4f}",
                 "test_adjacent_accuracy": f"{test_m['adjacent_accuracy']:.4f}",
                 "test_mae": f"{test_m['mae']:.4f}",
+                "test_raw_exact":   f"{test_m.get('raw_exact', float('nan')):.4f}",
+                "test_raw_within1": f"{test_m.get('raw_within1', float('nan')):.4f}",
+                "test_raw_mae":     f"{test_m.get('raw_mae', float('nan')):.4f}",
+                "test_pct_mae":     f"{test_m.get('pct_mae', float('nan')):.4f}",
                 "val_qwk": f"{val_m['qwk']:.4f}",
                 "best_epoch": result.get("best_epoch", ""),
                 "seconds": f"{dt:.1f}",
             }
             append_row(row)
-            print(f"    DONE  test_qwk={test_m['qwk']:.4f}  test_acc={test_m['accuracy']:.4f}  "
+            print(f"    DONE  train_qwk={train_m.get('qwk', 0):.4f} -> test_qwk={test_m['qwk']:.4f}  "
+                  f"gap={train_m.get('qwk', 0)-test_m['qwk']:+.4f}  "
+                  f"test_raw_w1={test_m.get('raw_within1', 0):.4f}  "
                   f"({dt:.1f}s)")
         except Exception as e:
             traceback.print_exc()
@@ -120,8 +140,15 @@ def main():
             append_row({
                 "run_id": run_id, "preprocess": prep, "input": inp,
                 "model": model_id, "family": family,
+                "train_qwk": "ERR", "train_accuracy": "", "train_adjacent_accuracy": "",
+                "train_mae": "",
+                "train_raw_exact": "", "train_raw_within1": "",
+                "train_raw_mae": "", "train_pct_mae": "",
                 "test_qwk": "ERR", "test_accuracy": "", "test_adjacent_accuracy": "",
-                "test_mae": "", "val_qwk": "", "best_epoch": "",
+                "test_mae": "",
+                "test_raw_exact": "", "test_raw_within1": "",
+                "test_raw_mae": "", "test_pct_mae": "",
+                "val_qwk": "", "best_epoch": "",
                 "seconds": f"{time.time() - t0:.1f}",
             })
 

@@ -1,0 +1,14 @@
+{
+  "run_id": "clean_ra_tfidf_svr",
+  "model": "tfidf_svr",
+  "family": "classical",
+  "preprocess": "clean",
+  "input": "ra",
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.4,
+    0.42000000000000004,
+    0.72,
+    0.81
+  ]
+}

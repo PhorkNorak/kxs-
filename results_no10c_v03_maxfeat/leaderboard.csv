@@ -1,0 +1,7 @@
+run_id,preprocess,input,model,family,train_qwk,train_accuracy,train_adjacent_accuracy,train_mae,train_raw_exact,train_raw_within1,train_raw_mae,train_pct_mae,test_qwk,test_accuracy,test_adjacent_accuracy,test_mae,test_raw_exact,test_raw_within1,test_raw_mae,test_pct_mae,val_qwk,best_epoch,seconds
+raw_ra_tfidf_svr_maxfeat,raw,ra,tfidf_svr_maxfeat,classical_v03,0.9129,0.7925,0.9937,0.2138,0.2107,0.8443,0.9827,9.5094,0.8155,0.6642,0.9635,0.3723,0.1752,0.6934,1.5109,13.3490,0.8162,,47.6
+raw_qar_tfidf_svr_maxfeat,raw,qar,tfidf_svr_maxfeat,classical_v03,0.9086,0.7909,0.9906,0.2186,0.2877,0.8491,0.9151,8.3184,0.8019,0.6496,0.9562,0.3942,0.2336,0.7080,1.4234,12.2358,0.8328,,47.1
+clean_ra_tfidf_svr_maxfeat,clean,ra,tfidf_svr_maxfeat,classical_v03,0.9135,0.7940,0.9937,0.2123,0.2264,0.8522,0.9623,9.2749,0.8210,0.6715,0.9635,0.3650,0.1752,0.6715,1.5255,13.6531,0.8291,,47.4
+clean_qar_tfidf_svr_maxfeat,clean,qar,tfidf_svr_maxfeat,classical_v03,0.9105,0.7956,0.9906,0.2138,0.2343,0.8208,0.9984,9.5264,0.7982,0.6423,0.9562,0.4015,0.1825,0.6934,1.4964,13.3003,0.8346,,47.3
+segment_ra_tfidf_svr_maxfeat,segment,ra,tfidf_svr_maxfeat,classical_v03,0.9102,0.7893,0.9921,0.2186,0.2956,0.8270,0.9245,8.5475,0.8141,0.6569,0.9635,0.3796,0.2628,0.6934,1.4307,12.0994,0.8518,,54.6
+segment_qar_tfidf_svr_maxfeat,segment,qar,tfidf_svr_maxfeat,classical_v03,0.9066,0.7893,0.9890,0.2217,0.3223,0.8491,0.8962,7.8478,0.7984,0.6423,0.9562,0.4015,0.2774,0.7299,1.3650,11.2052,0.8477,,59.7

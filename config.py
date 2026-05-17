@@ -4,11 +4,21 @@ import os
 import torch
 
 PROJECT_ROOT  = os.path.dirname(os.path.abspath(__file__))
-RAW_CSV       = os.path.join(PROJECT_ROOT, "data", "dataset.csv")
-RESULTS_DIR   = os.path.join(PROJECT_ROOT, "results")
+# RAW_CSV       = os.path.join(PROJECT_ROOT, "data", "dataset.csv")
+RAW_CSV       = os.path.join(PROJECT_ROOT, "data", "dataset_no_10c_biology.csv")
+
+# Drop rows whose ordinal score_label is 0 (only 14 samples in the corpus,
+# practically untrainable). Set False to keep the original 5-class task.
+DROP_SCORE_ZERO = False
+
+# Output directory is versioned by dataset variant so results from different
+# experiments don't overwrite each other. Change RUN_NAME when switching
+# datasets / score filters.
+RUN_NAME      = "no10c"            # v2: 909 rows (no 10C biology, keeps score=0)
+RESULTS_DIR   = os.path.join(PROJECT_ROOT, f"results_{RUN_NAME}")
 RUNS_DIR      = os.path.join(RESULTS_DIR, "runs")
 LEADERBOARD   = os.path.join(RESULTS_DIR, "leaderboard.csv")
-XAI_DIR       = os.path.join(PROJECT_ROOT, "xai_visuals")
+XAI_DIR       = os.path.join(PROJECT_ROOT, f"xai_visuals_{RUN_NAME}")
 
 for d in [RESULTS_DIR, RUNS_DIR, XAI_DIR]:
     os.makedirs(d, exist_ok=True)
@@ -16,6 +26,11 @@ for d in [RESULTS_DIR, RUNS_DIR, XAI_DIR]:
 # Grid axes
 PREPROC_MODES = ["raw", "clean", "segment"]
 INPUT_FORMATS = ["ra", "qar"]
+
+# Denominator used when feeding max_score as a scalar input feature to
+# neural heads (v03b). 20 is the largest observed Max Score in the corpus,
+# so max_score_feat = Max Score / 20.0 lands in (0, 1].
+MAX_SCORE_NORMALIZER = 20.0
 
 TRANSFORMER_BACKBONES = {
     "mbert": "bert-base-multilingual-cased",

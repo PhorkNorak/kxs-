@@ -1,0 +1,8 @@
+{
+  "run_id": "segment_ra_tfidf_svr_maxfeat",
+  "model": "tfidf_svr_maxfeat",
+  "family": "classical_v03",
+  "preprocess": "segment",
+  "input": "ra",
+  "experiment": "v03_maxscore_feature"
+}

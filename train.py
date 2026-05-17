@@ -44,8 +44,11 @@ def save_json(path: str, obj: dict):
 def save_predictions_csv(out_dir: str, split_name: str, df_proc, pred_scores):
     """Write per-sample predictions to <out_dir>/predictions_<split_name>.csv.
 
-    Columns: idx, Question, Reference, Answer, true_label, true_score,
-             pred_score, pred_label, abs_error
+    Columns:
+        idx, Question, Reference, Answer,
+        Max Score, true_raw, true_label, true_score,
+        pred_score, pred_label, pred_raw,
+        abs_error (5-class), raw_abs_error (raw points)
     """
     import pandas as pd
 
@@ -53,17 +56,25 @@ def save_predictions_csv(out_dir: str, split_name: str, df_proc, pred_scores):
     pred_labels = np.round(pred_scores * 4).astype(int).clip(0, 4)
     true_labels = df_proc["score_label"].values.astype(int)
     true_scores = df_proc["normalized_score"].values.astype(float)
+    max_scores  = df_proc["Max Score"].values.astype(int)
+    true_raw    = df_proc["Student Score"].values.astype(int)
+    pred_raw = np.minimum(np.round(pred_scores * max_scores).astype(int),
+                          max_scores).clip(0)
 
     out = pd.DataFrame({
         "idx": np.arange(len(df_proc)),
-        "Question":  df_proc["Question"].values,
-        "Reference": df_proc["Reference"].values,
-        "Answer":    df_proc["Answer"].values,
+        "Question":   df_proc["Question"].values,
+        "Reference":  df_proc["Reference"].values,
+        "Answer":     df_proc["Answer"].values,
+        "Max Score":  max_scores,
+        "true_raw":   true_raw,
         "true_label": true_labels,
         "true_score": true_scores,
         "pred_score": pred_scores,
         "pred_label": pred_labels,
-        "abs_error":  np.abs(pred_labels - true_labels),
+        "pred_raw":   pred_raw,
+        "abs_error":     np.abs(pred_labels - true_labels),
+        "raw_abs_error": np.abs(pred_raw - true_raw),
     })
     out_path = os.path.join(out_dir, f"predictions_{split_name}.csv")
     out.to_csv(out_path, index=False, encoding="utf-8-sig")
@@ -91,20 +102,30 @@ def train_classical(model_id, preprocess_mode, input_fmt, train_df, val_df, test
     model = make_classical(model_id)
     model.fit(train_a, train_b, train_p["normalized_score"].values)
 
-    val_pred  = model.predict(val_a,  val_b)
-    test_pred = model.predict(test_a, test_b)
-    val_m  = metrics(val_pred,  val_p["score_label"].values)
-    test_m = metrics(test_pred, test_p["score_label"].values)
+    train_pred = model.predict(train_a, train_b)
+    val_pred   = model.predict(val_a,   val_b)
+    test_pred  = model.predict(test_a,  test_b)
+
+    train_m = metrics(train_pred, train_p["score_label"].values,
+                      max_scores=train_p["Max Score"].values,
+                      true_raw=train_p["Student Score"].values)
+    val_m   = metrics(val_pred,   val_p["score_label"].values,
+                      max_scores=val_p["Max Score"].values,
+                      true_raw=val_p["Student Score"].values)
+    test_m  = metrics(test_pred,  test_p["score_label"].values,
+                      max_scores=test_p["Max Score"].values,
+                      true_raw=test_p["Student Score"].values)
 
     out = run_dir(run_id)
     save_json(os.path.join(out, "config.json"),
               {"run_id": run_id, "model": model_id, "family": "classical",
                "preprocess": preprocess_mode, "input": input_fmt})
     save_json(os.path.join(out, "metrics.json"),
-              {"val": val_m, "test": test_m, "best_epoch": None})
-    save_predictions_csv(out, "val",  val_p,  val_pred)
-    save_predictions_csv(out, "test", test_p, test_pred)
-    return {"val": val_m, "test": test_m}
+              {"train": train_m, "val": val_m, "test": test_m, "best_epoch": None})
+    save_predictions_csv(out, "train", train_p, train_pred)
+    save_predictions_csv(out, "val",   val_p,   val_pred)
+    save_predictions_csv(out, "test",  test_p,  test_pred)
+    return {"train": train_m, "val": val_m, "test": test_m}
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -184,6 +205,24 @@ def _train_neural_loop(
     loss_fn = nn.MSELoss()
     scaler = torch.cuda.amp.GradScaler() if use_amp and device == "cuda" else None
 
+    train_df_ref = train_loader.dataset.df
+    val_df_ref   = val_loader.dataset.df
+    test_df_ref  = test_loader.dataset.df
+    train_max = train_df_ref["Max Score"].values
+    train_raw = train_df_ref["Student Score"].values
+    val_max   = val_df_ref["Max Score"].values
+    val_raw   = val_df_ref["Student Score"].values
+    test_max  = test_df_ref["Max Score"].values
+    test_raw  = test_df_ref["Student Score"].values
+
+    # Non-shuffled inference loader over the train set (so predictions align
+    # row-for-row with train_df_ref for metric computation and CSV export).
+    train_infer_loader = DataLoader(
+        train_loader.dataset,
+        batch_size=train_loader.batch_size or 16,
+        shuffle=False,
+    )
+
     best_qwk = -1e9
     best_state = None
     best_epoch = -1
@@ -199,7 +238,7 @@ def _train_neural_loop(
             model, val_loader, optimizer, loss_fn, device,
             is_train=False, scaler=scaler, forward_keys=forward_keys,
         )
-        val_m = metrics(val_pred, val_lab)
+        val_m = metrics(val_pred, val_lab, max_scores=val_max, true_raw=val_raw)
         history.append({"epoch": ep, "train_loss": tr_loss, "val_loss": val_loss, **val_m})
         print(f"    epoch {ep:2d}  train_loss={tr_loss:.4f}  val_loss={val_loss:.4f}  "
               f"val_qwk={val_m['qwk']:.4f}  val_acc={val_m['accuracy']:.4f}")
@@ -223,26 +262,35 @@ def _train_neural_loop(
         model, test_loader, optimizer, loss_fn, device,
         is_train=False, scaler=scaler, forward_keys=forward_keys,
     )
-    test_m = metrics(test_pred, test_lab)
+    test_m = metrics(test_pred, test_lab, max_scores=test_max, true_raw=test_raw)
 
     # Re-evaluate val with best state for the metrics record
     _, val_pred, val_lab = _epoch(
         model, val_loader, optimizer, loss_fn, device,
         is_train=False, scaler=scaler, forward_keys=forward_keys,
     )
-    val_m = metrics(val_pred, val_lab)
+    val_m = metrics(val_pred, val_lab, max_scores=val_max, true_raw=val_raw)
+
+    # Train metrics with best checkpoint (overfit-gap reporting)
+    _, train_pred, train_lab = _epoch(
+        model, train_infer_loader, optimizer, loss_fn, device,
+        is_train=False, scaler=scaler, forward_keys=forward_keys,
+    )
+    train_m = metrics(train_pred, train_lab, max_scores=train_max, true_raw=train_raw)
 
     out = run_dir(run_id)
     save_json(os.path.join(out, "metrics.json"),
-              {"val": val_m, "test": test_m, "best_epoch": best_epoch, "history": history})
+              {"train": train_m, "val": val_m, "test": test_m,
+               "best_epoch": best_epoch, "history": history})
 
     if best_state is not None:
         torch.save(best_state, os.path.join(out, "best.pt"))
 
-    save_predictions_csv(out, "val",  val_loader.dataset.df,  val_pred)
-    save_predictions_csv(out, "test", test_loader.dataset.df, test_pred)
+    save_predictions_csv(out, "train", train_df_ref,           train_pred)
+    save_predictions_csv(out, "val",   val_loader.dataset.df,  val_pred)
+    save_predictions_csv(out, "test",  test_loader.dataset.df, test_pred)
 
-    return {"val": val_m, "test": test_m, "best_epoch": best_epoch}
+    return {"train": train_m, "val": val_m, "test": test_m, "best_epoch": best_epoch}
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -250,7 +298,8 @@ def _train_neural_loop(
 # ────────────────────────────────────────────────────────────────────────────
 
 
-def train_bilstm(preprocess_mode, input_fmt, train_df, val_df, test_df, run_id, max_epochs=None):
+def train_bilstm(preprocess_mode, input_fmt, train_df, val_df, test_df, run_id,
+                 max_epochs=None, max_feat=False):
     from data import apply_preprocess, build_pair, CharPairDataset, build_char_vocab
     from models.bilstm import BiLSTMScorer
 
@@ -267,22 +316,28 @@ def train_bilstm(preprocess_mode, input_fmt, train_df, val_df, test_df, run_id, 
         texts.append(b)
     char2id = build_char_vocab(texts)
 
-    train_ds = CharPairDataset(train_p, char2id, input_fmt)
-    val_ds   = CharPairDataset(val_p,   char2id, input_fmt)
-    test_ds  = CharPairDataset(test_p,  char2id, input_fmt)
+    train_ds = CharPairDataset(train_p, char2id, input_fmt, provide_max_score=max_feat)
+    val_ds   = CharPairDataset(val_p,   char2id, input_fmt, provide_max_score=max_feat)
+    test_ds  = CharPairDataset(test_p,  char2id, input_fmt, provide_max_score=max_feat)
 
     train_loader = DataLoader(train_ds, batch_size=C.BILSTM_BATCH, shuffle=True)
     val_loader   = DataLoader(val_ds,   batch_size=C.BILSTM_BATCH, shuffle=False)
     test_loader  = DataLoader(test_ds,  batch_size=C.BILSTM_BATCH, shuffle=False)
 
-    model = BiLSTMScorer(vocab_size=len(char2id))
-    forward_keys = ["input_ids_a", "attention_mask_a", "input_ids_b", "attention_mask_b"]
+    max_feat_dim = 1 if max_feat else 0
+    model = BiLSTMScorer(vocab_size=len(char2id), max_feat_dim=max_feat_dim)
+    forward_keys = ["input_ids_a", "attention_mask_a",
+                    "input_ids_b", "attention_mask_b"]
+    if max_feat:
+        forward_keys.append("max_score_feat")
 
+    family_name = "bilstm_maxfeat" if max_feat else "bilstm"
+    model_name  = "bilstm_maxfeat" if max_feat else "bilstm"
     out = run_dir(run_id)
     save_json(os.path.join(out, "config.json"),
-              {"run_id": run_id, "model": "bilstm", "family": "bilstm",
+              {"run_id": run_id, "model": model_name, "family": family_name,
                "preprocess": preprocess_mode, "input": input_fmt,
-               "vocab_size": len(char2id)})
+               "vocab_size": len(char2id), "max_feat": max_feat})
 
     return _train_neural_loop(
         model, train_loader, val_loader, test_loader, forward_keys,
@@ -308,7 +363,7 @@ def _make_tokenizer(backbone_name: str):
 
 def train_transformer(
     arch, backbone_key, preprocess_mode, input_fmt,
-    train_df, val_df, test_df, run_id, max_epochs=None,
+    train_df, val_df, test_df, run_id, max_epochs=None, max_feat=False,
 ):
     from data import apply_preprocess, PairDataset, CrossDataset
     from models.dual import DualEncoderScorer
@@ -322,29 +377,36 @@ def train_transformer(
     val_p   = apply_preprocess(val_df,   preprocess_mode)
     test_p  = apply_preprocess(test_df,  preprocess_mode)
 
+    max_feat_dim = 1 if max_feat else 0
     if arch == "dual":
-        train_ds = PairDataset(train_p, tokenizer, input_fmt)
-        val_ds   = PairDataset(val_p,   tokenizer, input_fmt)
-        test_ds  = PairDataset(test_p,  tokenizer, input_fmt)
-        forward_keys = ["input_ids_a", "attention_mask_a", "input_ids_b", "attention_mask_b"]
-        model = DualEncoderScorer(backbone_name)
+        train_ds = PairDataset(train_p, tokenizer, input_fmt, provide_max_score=max_feat)
+        val_ds   = PairDataset(val_p,   tokenizer, input_fmt, provide_max_score=max_feat)
+        test_ds  = PairDataset(test_p,  tokenizer, input_fmt, provide_max_score=max_feat)
+        forward_keys = ["input_ids_a", "attention_mask_a",
+                        "input_ids_b", "attention_mask_b"]
+        model = DualEncoderScorer(backbone_name, max_feat_dim=max_feat_dim)
     elif arch == "cross":
-        train_ds = CrossDataset(train_p, tokenizer, input_fmt)
-        val_ds   = CrossDataset(val_p,   tokenizer, input_fmt)
-        test_ds  = CrossDataset(test_p,  tokenizer, input_fmt)
+        train_ds = CrossDataset(train_p, tokenizer, input_fmt, provide_max_score=max_feat)
+        val_ds   = CrossDataset(val_p,   tokenizer, input_fmt, provide_max_score=max_feat)
+        test_ds  = CrossDataset(test_p,  tokenizer, input_fmt, provide_max_score=max_feat)
         forward_keys = ["input_ids", "attention_mask"]
-        model = CrossEncoderScorer(backbone_name)
+        model = CrossEncoderScorer(backbone_name, max_feat_dim=max_feat_dim)
     else:
         raise ValueError(arch)
+    if max_feat:
+        forward_keys.append("max_score_feat")
 
     train_loader = DataLoader(train_ds, batch_size=C.TXFMR_BATCH, shuffle=True)
     val_loader   = DataLoader(val_ds,   batch_size=C.TXFMR_BATCH, shuffle=False)
     test_loader  = DataLoader(test_ds,  batch_size=C.TXFMR_BATCH, shuffle=False)
 
+    family_name = f"{arch}_maxfeat" if max_feat else arch
+    model_id    = f"{arch}_{backbone_key}_maxfeat" if max_feat else f"{arch}_{backbone_key}"
     out = run_dir(run_id)
     save_json(os.path.join(out, "config.json"),
-              {"run_id": run_id, "model": f"{arch}_{backbone_key}", "family": arch,
-               "backbone": backbone_name, "preprocess": preprocess_mode, "input": input_fmt})
+              {"run_id": run_id, "model": model_id, "family": family_name,
+               "backbone": backbone_name, "preprocess": preprocess_mode,
+               "input": input_fmt, "max_feat": max_feat})
 
     return _train_neural_loop(
         model, train_loader, val_loader, test_loader, forward_keys,

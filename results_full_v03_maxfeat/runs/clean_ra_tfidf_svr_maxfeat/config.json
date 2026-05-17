@@ -1,0 +1,8 @@
+{
+  "run_id": "clean_ra_tfidf_svr_maxfeat",
+  "model": "tfidf_svr_maxfeat",
+  "family": "classical_v03",
+  "preprocess": "clean",
+  "input": "ra",
+  "experiment": "v03_maxscore_feature"
+}

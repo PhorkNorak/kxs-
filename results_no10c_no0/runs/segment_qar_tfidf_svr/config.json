@@ -1,0 +1,7 @@
+{
+  "run_id": "segment_qar_tfidf_svr",
+  "model": "tfidf_svr",
+  "family": "classical",
+  "preprocess": "segment",
+  "input": "qar"
+}

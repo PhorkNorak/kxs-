@@ -1,0 +1,7 @@
+{
+  "run_id": "clean_ra_tfidf_svr",
+  "model": "tfidf_svr",
+  "family": "classical",
+  "preprocess": "clean",
+  "input": "ra"
+}

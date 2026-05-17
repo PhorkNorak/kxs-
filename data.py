@@ -21,6 +21,8 @@ def load_dataframe(csv_path: str = C.RAW_CSV) -> pd.DataFrame:
     df["normalized_score"] = df["Student Score"] / df["Max Score"]
     df["score_label"] = (df["normalized_score"] * 4).round().astype(int).clip(0, 4)
     df = df.dropna(subset=["Question", "Reference", "Answer"])
+    if C.DROP_SCORE_ZERO:
+        df = df[df["score_label"] > 0].reset_index(drop=True)
     for col in ["Question", "Reference", "Answer"]:
         df[col] = df[col].astype(str).str.replace(r"\n", " ", regex=True).str.strip()
     return df.reset_index(drop=True)
@@ -103,15 +105,26 @@ def build_single_pair(row, input_fmt: str):
 
 
 class PairDataset(Dataset):
-    """Two-side tokenized dataset for DualEncoder."""
+    """Two-side tokenized dataset for DualEncoder.
 
-    def __init__(self, df, tokenizer, input_fmt: str, max_len: int = C.TXFMR_MAX_LEN):
+    When `provide_max_score=True`, each batch also yields `max_score_feat`,
+    a scalar in (0, 1] equal to `Max Score / MAX_SCORE_NORMALIZER`. Used by
+    v03b neural-head max-score feature.
+    """
+
+    def __init__(self, df, tokenizer, input_fmt: str, max_len: int = C.TXFMR_MAX_LEN,
+                 provide_max_score: bool = False):
         self.df = df.reset_index(drop=True)
         self.tokenizer = tokenizer
         self.input_fmt = input_fmt
         self.max_len = max_len
         self.scores = df["normalized_score"].values.astype(np.float32)
         self.labels = df["score_label"].values.astype(np.int64)
+        self.provide_max_score = provide_max_score
+        if provide_max_score:
+            self.max_score_feat = (
+                df["Max Score"].values.astype(np.float32) / float(C.MAX_SCORE_NORMALIZER)
+            )
 
     def __len__(self):
         return len(self.df)
@@ -132,7 +145,7 @@ class PairDataset(Dataset):
             truncation=True,
             return_tensors="pt",
         )
-        return {
+        out = {
             "input_ids_a": enc_a["input_ids"].squeeze(0),
             "attention_mask_a": enc_a["attention_mask"].squeeze(0),
             "input_ids_b": enc_b["input_ids"].squeeze(0),
@@ -140,18 +153,28 @@ class PairDataset(Dataset):
             "score": torch.tensor(self.scores[idx], dtype=torch.float32),
             "label": torch.tensor(self.labels[idx], dtype=torch.long),
         }
+        if self.provide_max_score:
+            out["max_score_feat"] = torch.tensor([self.max_score_feat[idx]],
+                                                  dtype=torch.float32)
+        return out
 
 
 class CrossDataset(Dataset):
     """Joint-input dataset for CrossEncoder — tokenizer handles [CLS]/[SEP]."""
 
-    def __init__(self, df, tokenizer, input_fmt: str, max_len: int = C.TXFMR_MAX_LEN):
+    def __init__(self, df, tokenizer, input_fmt: str, max_len: int = C.TXFMR_MAX_LEN,
+                 provide_max_score: bool = False):
         self.df = df.reset_index(drop=True)
         self.tokenizer = tokenizer
         self.input_fmt = input_fmt
         self.max_len = max_len
         self.scores = df["normalized_score"].values.astype(np.float32)
         self.labels = df["score_label"].values.astype(np.int64)
+        self.provide_max_score = provide_max_score
+        if provide_max_score:
+            self.max_score_feat = (
+                df["Max Score"].values.astype(np.float32) / float(C.MAX_SCORE_NORMALIZER)
+            )
 
     def __len__(self):
         return len(self.df)
@@ -166,24 +189,34 @@ class CrossDataset(Dataset):
             truncation=True,
             return_tensors="pt",
         )
-        return {
+        out = {
             "input_ids": enc["input_ids"].squeeze(0),
             "attention_mask": enc["attention_mask"].squeeze(0),
             "score": torch.tensor(self.scores[idx], dtype=torch.float32),
             "label": torch.tensor(self.labels[idx], dtype=torch.long),
         }
+        if self.provide_max_score:
+            out["max_score_feat"] = torch.tensor([self.max_score_feat[idx]],
+                                                  dtype=torch.float32)
+        return out
 
 
 class CharPairDataset(Dataset):
     """Character-level tokenized two-side dataset for BiLSTM."""
 
-    def __init__(self, df, char2id, input_fmt: str, max_len: int = 256):
+    def __init__(self, df, char2id, input_fmt: str, max_len: int = 256,
+                 provide_max_score: bool = False):
         self.df = df.reset_index(drop=True)
         self.char2id = char2id
         self.input_fmt = input_fmt
         self.max_len = max_len
         self.scores = df["normalized_score"].values.astype(np.float32)
         self.labels = df["score_label"].values.astype(np.int64)
+        self.provide_max_score = provide_max_score
+        if provide_max_score:
+            self.max_score_feat = (
+                df["Max Score"].values.astype(np.float32) / float(C.MAX_SCORE_NORMALIZER)
+            )
 
     def __len__(self):
         return len(self.df)
@@ -199,7 +232,7 @@ class CharPairDataset(Dataset):
         side_a, side_b = build_pair(self.df.iloc[idx], self.input_fmt)
         ids_a, mask_a = self._encode(side_a)
         ids_b, mask_b = self._encode(side_b)
-        return {
+        out = {
             "input_ids_a": ids_a,
             "attention_mask_a": mask_a,
             "input_ids_b": ids_b,
@@ -207,6 +240,10 @@ class CharPairDataset(Dataset):
             "score": torch.tensor(self.scores[idx], dtype=torch.float32),
             "label": torch.tensor(self.labels[idx], dtype=torch.long),
         }
+        if self.provide_max_score:
+            out["max_score_feat"] = torch.tensor([self.max_score_feat[idx]],
+                                                  dtype=torch.float32)
+        return out
 
 
 def build_char_vocab(texts, max_vocab: int = C.BILSTM_VOCAB):

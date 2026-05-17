@@ -50,13 +50,17 @@ def _patch_rope(encoder):
 
 
 class DualEncoderScorer(nn.Module):
+    """Transformer dual encoder with optional max-score scalar input (v03b)."""
+
     def __init__(
         self,
         backbone_name: str,
         dropout: float = C.TXFMR_DROPOUT,
         freeze_layers: int = C.TXFMR_FREEZE_N,
+        max_feat_dim: int = 0,
     ):
         super().__init__()
+        self.max_feat_dim = max_feat_dim
         cfg = AutoConfig.from_pretrained(backbone_name, trust_remote_code=True)
         self.encoder = AutoModel.from_pretrained(
             backbone_name, config=cfg, trust_remote_code=True, torch_dtype=torch.float32
@@ -65,9 +69,10 @@ class DualEncoderScorer(nn.Module):
         _patch_rope(self.encoder)
         if freeze_layers > 0:
             self._freeze(freeze_layers)
+        head_in = 4 * self.hidden_dim + max_feat_dim
         self.head = nn.Sequential(
             nn.Dropout(dropout),
-            nn.Linear(4 * self.hidden_dim, 256),
+            nn.Linear(head_in, 256),
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(256, 1),
@@ -106,8 +111,12 @@ class DualEncoderScorer(nn.Module):
         )
         return self._pool(out.last_hidden_state, attention_mask)
 
-    def forward(self, input_ids_a, attention_mask_a, input_ids_b, attention_mask_b):
+    def forward(self, input_ids_a, attention_mask_a, input_ids_b, attention_mask_b,
+                max_score_feat=None):
         e_a = self.encode(input_ids_a, attention_mask_a)
         e_b = self.encode(input_ids_b, attention_mask_b)
         inter = torch.cat([e_a, e_b, (e_a - e_b).abs(), e_a * e_b], dim=1)
+        if self.max_feat_dim > 0:
+            assert max_score_feat is not None, "max_score_feat required when max_feat_dim>0"
+            inter = torch.cat([inter, max_score_feat], dim=1)
         return self.head(inter).squeeze(-1)

@@ -1,0 +1,7 @@
+{
+  "run_id": "raw_qar_tfidf_cos",
+  "model": "tfidf_cos",
+  "family": "classical",
+  "preprocess": "raw",
+  "input": "qar"
+}

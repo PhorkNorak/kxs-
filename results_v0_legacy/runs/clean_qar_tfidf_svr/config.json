@@ -1,0 +1,7 @@
+{
+  "run_id": "clean_qar_tfidf_svr",
+  "model": "tfidf_svr",
+  "family": "classical",
+  "preprocess": "clean",
+  "input": "qar"
+}
