@@ -71,7 +71,8 @@
       "Bash(python experiments/check_progress.py --quiet)",
       "Bash(python experiments/exp01_tfidf_baseline.py --datasets no10c_no0 --resume)",
       "Bash(python experiments/compare_all.py --topk 10)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)"
     ]
   }
 }

@@ -5,18 +5,26 @@
 # ─────────────────────────────────────────────────────────────────────
 # Recommended install on HPC (Linux, CUDA GPU):
 #
-#   pip install --upgrade pip
-#   pip install -r requirements.txt
+#   1. Check your NVIDIA driver / supported CUDA version:
+#        nvidia-smi   # see "CUDA Version" in the top-right corner
 #
-# On Linux, `pip install torch` defaults to the CUDA-12.1 wheel (from
-# PyPI directly), so GPU support comes for free. If your HPC needs a
-# different CUDA build, install torch first with the explicit index:
+#   2. Install torch with the matching CUDA wheel BEFORE the rest:
+#        pip install --upgrade pip
+#        # driver 12.4+:  use cu124 (most compatible)
+#        pip install torch --index-url https://download.pytorch.org/whl/cu124
+#        # driver 12.8:   use cu128 (latest 12.x)
+#        # driver 12.1:   use cu121
+#        # driver 11.8:   use cu118
 #
-#   pip install torch --index-url https://download.pytorch.org/whl/cu118
-#   pip install -r requirements.txt
+#   3. Install everything else:
+#        pip install -r requirements.txt
 #
-# On Windows the default wheel is CPU-only; use the cu121 index above
-# to force CUDA.
+# ⚠ Do NOT run `pip install -r requirements.txt` directly without step 2 —
+#   PyPI's default torch wheel uses the LATEST CUDA (currently cu130) which
+#   requires a fresh GPU driver. If your driver is older you'll get the
+#   "NVIDIA driver too old" warning and CUDA will be unavailable.
+#
+# On Windows the default wheel is CPU-only; use the cu124 index to force CUDA.
 # ─────────────────────────────────────────────────────────────────────
 
 # ── Deep learning ────────────────────────────────────────────────
