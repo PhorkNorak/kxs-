@@ -234,14 +234,43 @@ def _train_neural_loop(
             model, train_loader, optimizer, loss_fn, device,
             is_train=True, scaler=scaler, forward_keys=forward_keys,
         )
+        # End-of-epoch evaluation passes on train (non-shuffled), val, and test —
+        # gives full per-epoch train/val/test curves for plotting.
+        ep_train_loss, ep_train_pred, ep_train_lab = _epoch(
+            model, train_infer_loader, optimizer, loss_fn, device,
+            is_train=False, scaler=scaler, forward_keys=forward_keys,
+        )
         val_loss, val_pred, val_lab = _epoch(
             model, val_loader, optimizer, loss_fn, device,
             is_train=False, scaler=scaler, forward_keys=forward_keys,
         )
-        val_m = metrics(val_pred, val_lab, max_scores=val_max, true_raw=val_raw)
-        history.append({"epoch": ep, "train_loss": tr_loss, "val_loss": val_loss, **val_m})
-        print(f"    epoch {ep:2d}  train_loss={tr_loss:.4f}  val_loss={val_loss:.4f}  "
-              f"val_qwk={val_m['qwk']:.4f}  val_acc={val_m['accuracy']:.4f}")
+        ep_test_loss, ep_test_pred, ep_test_lab = _epoch(
+            model, test_loader, optimizer, loss_fn, device,
+            is_train=False, scaler=scaler, forward_keys=forward_keys,
+        )
+        train_m_ep = metrics(ep_train_pred, ep_train_lab,
+                             max_scores=train_max, true_raw=train_raw)
+        val_m      = metrics(val_pred, val_lab,
+                             max_scores=val_max, true_raw=val_raw)
+        test_m_ep  = metrics(ep_test_pred, ep_test_lab,
+                             max_scores=test_max, true_raw=test_raw)
+        history.append({
+            "epoch": ep,
+            "train_loss": tr_loss,
+            "val_loss": val_loss,
+            "test_loss": ep_test_loss,
+            # train-set metrics this epoch
+            **{f"train_{k}": v for k, v in train_m_ep.items()},
+            # val-set metrics (kept under bare keys for backward compat with
+            # the older plot script that reads "qwk", "accuracy", etc.)
+            **val_m,
+            **{f"val_{k}": v for k, v in val_m.items()},
+            # test-set metrics this epoch
+            **{f"test_{k}": v for k, v in test_m_ep.items()},
+        })
+        print(f"    epoch {ep:2d}  loss(tr/va/te)={tr_loss:.4f}/{val_loss:.4f}/{ep_test_loss:.4f}  "
+              f"qwk(tr/va/te)={train_m_ep['qwk']:.4f}/{val_m['qwk']:.4f}/{test_m_ep['qwk']:.4f}  "
+              f"acc(tr/va/te)={train_m_ep['accuracy']:.4f}/{val_m['accuracy']:.4f}/{test_m_ep['accuracy']:.4f}")
 
         if val_m["qwk"] > best_qwk:
             best_qwk = val_m["qwk"]

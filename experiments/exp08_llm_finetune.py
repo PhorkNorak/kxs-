@@ -147,21 +147,43 @@ def load_model(model_name: str, max_seq_length: int):
     return model, tok, path
 
 
+def get_text_tokenizer(tokenizer):
+    """Extract the text-only tokenizer from a (possibly multimodal) processor.
+
+    Multimodal processors (Gemma4Processor, Qwen3VLProcessor, etc.) wrap a
+    text tokenizer as `.tokenizer`. Their __call__ expects images=... as the
+    first positional arg and returns extra batch dimensions on input_ids,
+    which breaks our text-only collator. Use the underlying text tokenizer
+    directly to get clean 1D token lists.
+    """
+    inner = getattr(tokenizer, "tokenizer", None)
+    if inner is not None and hasattr(inner, "encode") and hasattr(inner, "decode"):
+        return inner
+    return tokenizer
+
+
 def tokenize_for_sft(rows, tokenizer, max_seq_length: int):
-    """Builds a dataset of input_ids + labels with completion-only masking."""
+    """Builds a dataset of input_ids + labels with completion-only masking.
+
+    Uses the *text* tokenizer (bypassing multimodal processor wrappers) so we
+    always get clean 1D lists of token ids regardless of model family.
+    """
     from datasets import Dataset
+    text_tok = get_text_tokenizer(tokenizer)
+    eos_token = getattr(text_tok, "eos_token", None) or getattr(tokenizer, "eos_token", "") or ""
     samples = []
     for r in rows:
         prompt = format_prompt(r, include_score=False)
-        full = format_prompt(r, include_score=True) + tokenizer.eos_token
-        # Use text= keyword: Gemma4Processor / Qwen3.5VL are multimodal — their
-        # first positional argument is `images`, not text.
-        enc_full = tokenizer(text=full, truncation=True, max_length=max_seq_length,
-                             add_special_tokens=False)
-        enc_prompt = tokenizer(text=prompt, truncation=True, max_length=max_seq_length,
-                               add_special_tokens=False)
-        ids = enc_full["input_ids"]
-        n_prompt = min(len(enc_prompt["input_ids"]), len(ids))
+        full = format_prompt(r, include_score=True) + eos_token
+        # encode() returns a flat list of ints (never nested batch dim)
+        ids = text_tok.encode(full, add_special_tokens=False)
+        prompt_ids = text_tok.encode(prompt, add_special_tokens=False)
+        # Truncate to max_seq_length (defensive)
+        if len(ids) > max_seq_length:
+            ids = ids[:max_seq_length]
+        if len(prompt_ids) > max_seq_length:
+            prompt_ids = prompt_ids[:max_seq_length]
+        n_prompt = min(len(prompt_ids), len(ids))
         labels = [-100] * n_prompt + ids[n_prompt:]
         if len(labels) < len(ids):
             labels = labels + [-100] * (len(ids) - len(labels))
@@ -184,25 +206,38 @@ def collate_pad(features, pad_id: int):
 
 
 def generate_score(model, tokenizer, prompt: str, max_score: int, device):
-    """Greedy-decode 5 tokens, regex-parse first integer, clip to [0, max_score]."""
-    # text= keyword required for multimodal processors (Gemma 4 / Qwen3.5VL).
-    inputs = tokenizer(text=prompt, return_tensors="pt", truncation=True,
-                       max_length=tokenizer.model_max_length).to(device)
+    """Greedy-decode 5 tokens, regex-parse first integer, clip to [0, max_score].
+
+    Uses the underlying text tokenizer to encode and decode — this avoids
+    multimodal processor wrappers that wrap input_ids with extra batch dims.
+    """
+    text_tok = get_text_tokenizer(tokenizer)
+    pad_id = (getattr(text_tok, "pad_token_id", None)
+              or getattr(tokenizer, "pad_token_id", None)
+              or getattr(text_tok, "eos_token_id", None)
+              or getattr(tokenizer, "eos_token_id", 0))
+    ids = text_tok.encode(prompt, add_special_tokens=False)
+    # Defensive truncation
+    max_ctx = getattr(text_tok, "model_max_length", None) or 2048
+    if max_ctx and max_ctx < 100000 and len(ids) > max_ctx - 8:
+        ids = ids[-(max_ctx - 8):]
+    ids_t = torch.tensor([ids], dtype=torch.long, device=device)
+    attn  = torch.ones_like(ids_t)
     with torch.no_grad():
         out = model.generate(
-            **inputs,
+            input_ids=ids_t,
+            attention_mask=attn,
             max_new_tokens=5,
             do_sample=False,
-            pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
+            pad_token_id=pad_id,
         )
-    new_tokens = out[0, inputs["input_ids"].shape[1]:]
-    text = tokenizer.decode(new_tokens, skip_special_tokens=True)
+    new_tokens = out[0, ids_t.shape[1]:].tolist()
+    text = text_tok.decode(new_tokens, skip_special_tokens=True)
     m = re.search(r"\d+", text)
     if m:
         score = int(m.group())
         score = max(0, min(score, int(max_score)))
         return score, text.strip()
-    # fallback: predict the middle class
     return int(max_score) // 2, text.strip()
 
 

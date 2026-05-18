@@ -72,7 +72,9 @@
       "Bash(python experiments/exp01_tfidf_baseline.py --datasets no10c_no0 --resume)",
       "Bash(python experiments/compare_all.py --topk 10)",
       "Bash(pip install *)",
-      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)"
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
+      "Bash(python experiments/plot_history.py)",
+      "Bash(python experiments/plot_history.py --run results_no10c_v06_transformer/runs/clean_ra_dual_gte)"
     ]
   }
 }
