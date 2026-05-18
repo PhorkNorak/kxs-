@@ -1,0 +1,9 @@
+{
+  "run_id": "segment_ra_dual_mbert_maxfeat",
+  "model": "dual_mbert_maxfeat",
+  "family": "dual_maxfeat",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "segment",
+  "input": "ra",
+  "max_feat": true
+}

@@ -1,0 +1,9 @@
+{
+  "run_id": "segment_ra_dual_mbert",
+  "model": "dual_mbert",
+  "family": "dual",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "segment",
+  "input": "ra",
+  "max_feat": false
+}

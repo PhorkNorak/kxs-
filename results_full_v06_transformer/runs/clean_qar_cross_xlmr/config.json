@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_qar_cross_xlmr",
+  "model": "cross_xlmr",
+  "family": "cross",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": false
+}

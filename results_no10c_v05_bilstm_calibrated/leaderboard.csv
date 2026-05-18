@@ -1,0 +1,3 @@
+run_id,preprocess,input,model,family,train_qwk,train_accuracy,train_adjacent_accuracy,train_mae,train_raw_exact,train_raw_within1,train_raw_mae,train_pct_mae,test_qwk,test_accuracy,test_adjacent_accuracy,test_mae,test_raw_exact,test_raw_within1,test_raw_mae,test_pct_mae,val_qwk,best_epoch,seconds
+clean_qar_bilstm,clean,qar,bilstm,bilstm,0.8810,0.7689,0.9717,0.2610,0.4921,0.7909,0.9450,7.6117,0.6477,0.6715,0.8686,0.5036,0.4526,0.6058,1.7445,12.9684,0.8554,,0.4
+clean_ra_bilstm,clean,ra,bilstm,bilstm,0.8857,0.7736,0.9670,0.2594,0.5267,0.8192,0.8506,6.9684,0.6757,0.6423,0.8686,0.5109,0.4453,0.6788,1.6861,12.7190,0.8369,,0.5

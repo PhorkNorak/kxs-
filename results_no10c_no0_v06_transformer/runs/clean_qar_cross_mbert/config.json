@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_qar_cross_mbert",
+  "model": "cross_mbert",
+  "family": "cross",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": false
+}

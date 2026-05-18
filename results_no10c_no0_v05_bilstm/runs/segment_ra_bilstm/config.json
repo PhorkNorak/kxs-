@@ -1,0 +1,9 @@
+{
+  "run_id": "segment_ra_bilstm",
+  "model": "bilstm",
+  "family": "bilstm",
+  "preprocess": "segment",
+  "input": "ra",
+  "vocab_size": 98,
+  "max_feat": false
+}

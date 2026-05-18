@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_qar_dual_mbert",
+  "model": "dual_mbert",
+  "family": "dual",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": false
+}

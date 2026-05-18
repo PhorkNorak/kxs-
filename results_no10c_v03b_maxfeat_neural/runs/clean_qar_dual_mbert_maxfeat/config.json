@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_qar_dual_mbert_maxfeat",
+  "model": "dual_mbert_maxfeat",
+  "family": "dual_maxfeat",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": true
+}

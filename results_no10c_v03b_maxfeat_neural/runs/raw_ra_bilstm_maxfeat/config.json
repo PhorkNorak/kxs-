@@ -1,0 +1,9 @@
+{
+  "run_id": "raw_ra_bilstm_maxfeat",
+  "model": "bilstm_maxfeat",
+  "family": "bilstm_maxfeat",
+  "preprocess": "raw",
+  "input": "ra",
+  "vocab_size": 117,
+  "max_feat": true
+}

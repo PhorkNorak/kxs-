@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_qar_cross_gte",
+  "model": "cross_gte",
+  "family": "cross",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": false
+}

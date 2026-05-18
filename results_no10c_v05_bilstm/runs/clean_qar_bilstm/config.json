@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_qar_bilstm",
+  "model": "bilstm",
+  "family": "bilstm",
+  "preprocess": "clean",
+  "input": "qar",
+  "vocab_size": 99,
+  "max_feat": false
+}

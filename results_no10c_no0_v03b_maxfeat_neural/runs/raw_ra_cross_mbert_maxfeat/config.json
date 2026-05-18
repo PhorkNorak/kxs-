@@ -1,0 +1,9 @@
+{
+  "run_id": "raw_ra_cross_mbert_maxfeat",
+  "model": "cross_mbert_maxfeat",
+  "family": "cross_maxfeat",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "raw",
+  "input": "ra",
+  "max_feat": true
+}

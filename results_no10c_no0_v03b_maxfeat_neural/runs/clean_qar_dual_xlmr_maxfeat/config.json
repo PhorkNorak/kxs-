@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_qar_dual_xlmr_maxfeat",
+  "model": "dual_xlmr_maxfeat",
+  "family": "dual_maxfeat",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": true
+}

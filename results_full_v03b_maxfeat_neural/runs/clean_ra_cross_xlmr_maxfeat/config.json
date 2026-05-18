@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_ra_cross_xlmr_maxfeat",
+  "model": "cross_xlmr_maxfeat",
+  "family": "cross_maxfeat",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "clean",
+  "input": "ra",
+  "max_feat": true
+}

@@ -1,0 +1,16 @@
+{
+  "run_id": "raw_ra_bilstm",
+  "model": "bilstm",
+  "family": "bilstm",
+  "preprocess": "raw",
+  "input": "ra",
+  "vocab_size": 119,
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.17,
+    0.33,
+    0.62,
+    0.78
+  ]
+}

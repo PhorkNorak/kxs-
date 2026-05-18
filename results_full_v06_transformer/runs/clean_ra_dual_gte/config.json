@@ -1,0 +1,9 @@
+{
+  "run_id": "clean_ra_dual_gte",
+  "model": "dual_gte",
+  "family": "dual",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "clean",
+  "input": "ra",
+  "max_feat": false
+}

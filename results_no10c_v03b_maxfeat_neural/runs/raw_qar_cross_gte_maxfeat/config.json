@@ -1,0 +1,9 @@
+{
+  "run_id": "raw_qar_cross_gte_maxfeat",
+  "model": "cross_gte_maxfeat",
+  "family": "cross_maxfeat",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "raw",
+  "input": "qar",
+  "max_feat": true
+}

@@ -1,0 +1,9 @@
+{
+  "run_id": "raw_qar_dual_xlmr",
+  "model": "dual_xlmr",
+  "family": "dual",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "raw",
+  "input": "qar",
+  "max_feat": false
+}

@@ -1,0 +1,9 @@
+{
+  "run_id": "segment_ra_dual_xlmr_maxfeat",
+  "model": "dual_xlmr_maxfeat",
+  "family": "dual_maxfeat",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "segment",
+  "input": "ra",
+  "max_feat": true
+}

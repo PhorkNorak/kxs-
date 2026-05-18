@@ -1,7 +1,7 @@
 run_id,preprocess,input,model,family,train_qwk,train_accuracy,train_adjacent_accuracy,train_mae,train_raw_exact,train_raw_within1,train_raw_mae,train_pct_mae,test_qwk,test_accuracy,test_adjacent_accuracy,test_mae,test_raw_exact,test_raw_within1,test_raw_mae,test_pct_mae,val_qwk,best_epoch,seconds
-raw_ra_tfidf_svr_bucket,raw,ra,tfidf_svr_bucket,classical_v04,0.8293,0.6848,0.9758,0.3394,0.2162,0.7754,1.1196,10.3234,0.7420,0.6348,0.9382,0.4270,0.2809,0.6854,1.4775,12.6251,0.6626,,65.3
-raw_qar_tfidf_svr_bucket,raw,qar,tfidf_svr_bucket,classical_v04,0.8330,0.6944,0.9758,0.3297,0.1800,0.7476,1.1884,11.2654,0.7496,0.6517,0.9382,0.4101,0.2472,0.6910,1.4888,12.9902,0.6754,,65.2
-clean_ra_tfidf_svr_bucket,clean,ra,tfidf_svr_bucket,classical_v04,0.8346,0.7017,0.9746,0.3237,0.2174,0.7572,1.1413,10.4249,0.7697,0.6910,0.9382,0.3708,0.2753,0.6854,1.4663,12.5595,0.6750,,65.2
-clean_qar_tfidf_svr_bucket,clean,qar,tfidf_svr_bucket,classical_v04,0.8286,0.6920,0.9734,0.3345,0.2162,0.7440,1.1655,10.6635,0.7562,0.6629,0.9382,0.3989,0.2584,0.6854,1.4607,12.6906,0.6646,,65.3
-segment_ra_tfidf_svr_bucket,segment,ra,tfidf_svr_bucket,classical_v04,0.8350,0.7041,0.9734,0.3225,0.1932,0.7524,1.1848,11.2079,0.7729,0.6854,0.9438,0.3708,0.2360,0.6854,1.4719,13.0698,0.6831,,68.7
-segment_qar_tfidf_svr_bucket,segment,qar,tfidf_svr_bucket,classical_v04,0.8259,0.6932,0.9710,0.3357,0.1872,0.7403,1.2138,11.4586,0.7527,0.6629,0.9382,0.3989,0.2360,0.7022,1.4607,13.0136,0.6809,,68.2
+raw_ra_tfidf_svr_bucket,raw,ra,tfidf_svr_bucket,classical_v04,0.8293,0.6848,0.9758,0.3394,0.2162,0.7754,1.1196,10.3234,0.7420,0.6348,0.9382,0.4270,0.2809,0.6854,1.4775,12.6251,0.6626,,37.6
+raw_qar_tfidf_svr_bucket,raw,qar,tfidf_svr_bucket,classical_v04,0.8330,0.6944,0.9758,0.3297,0.1800,0.7476,1.1884,11.2654,0.7496,0.6517,0.9382,0.4101,0.2472,0.6910,1.4888,12.9902,0.6754,,36.9
+clean_ra_tfidf_svr_bucket,clean,ra,tfidf_svr_bucket,classical_v04,0.8346,0.7017,0.9746,0.3237,0.2174,0.7572,1.1413,10.4249,0.7697,0.6910,0.9382,0.3708,0.2753,0.6854,1.4663,12.5595,0.6750,,37.8
+clean_qar_tfidf_svr_bucket,clean,qar,tfidf_svr_bucket,classical_v04,0.8286,0.6920,0.9734,0.3345,0.2162,0.7440,1.1655,10.6635,0.7562,0.6629,0.9382,0.3989,0.2584,0.6854,1.4607,12.6906,0.6646,,38.1
+segment_ra_tfidf_svr_bucket,segment,ra,tfidf_svr_bucket,classical_v04,0.8350,0.7041,0.9734,0.3225,0.1932,0.7524,1.1848,11.2079,0.7729,0.6854,0.9438,0.3708,0.2360,0.6854,1.4719,13.0698,0.6831,,39.8
+segment_qar_tfidf_svr_bucket,segment,qar,tfidf_svr_bucket,classical_v04,0.8259,0.6932,0.9710,0.3357,0.1872,0.7403,1.2138,11.4586,0.7527,0.6629,0.9382,0.3989,0.2360,0.7022,1.4607,13.0136,0.6809,,39.9

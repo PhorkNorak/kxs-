@@ -1,0 +1,9 @@
+{
+  "run_id": "segment_qar_dual_mbert",
+  "model": "dual_mbert",
+  "family": "dual",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "segment",
+  "input": "qar",
+  "max_feat": false
+}
