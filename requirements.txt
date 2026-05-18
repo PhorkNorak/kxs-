@@ -1,28 +1,46 @@
-# Core
+# KX-Simple — Khmer ASAG experiments
+# Minimum dependencies for `experiments/exp*.py` end-to-end pipeline.
+# All version pins are lower-bounds; pip will pick latest compatible.
+#
+# ─────────────────────────────────────────────────────────────────────
+# Recommended install on HPC (Linux, CUDA GPU):
+#
+#   pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# On Linux, `pip install torch` defaults to the CUDA-12.1 wheel (from
+# PyPI directly), so GPU support comes for free. If your HPC needs a
+# different CUDA build, install torch first with the explicit index:
+#
+#   pip install torch --index-url https://download.pytorch.org/whl/cu118
+#   pip install -r requirements.txt
+#
+# On Windows the default wheel is CPU-only; use the cu121 index above
+# to force CUDA.
+# ─────────────────────────────────────────────────────────────────────
+
+# ── Deep learning ────────────────────────────────────────────────
 torch>=2.0.0
 transformers>=4.36.0
-datasets>=2.14.0
 
-# Classical ML
+# ── Classical ML ─────────────────────────────────────────────────
 scikit-learn>=1.3.0
-scipy>=1.11.0
+scipy>=1.11.0           # transitive dep of sklearn — pinned for safety
+gensim>=4.3.0           # FastText baseline in models/classical.py
 
-# Embeddings
-gensim>=4.3.0
-sentence-transformers>=2.2.0
+# ── Khmer NLP ────────────────────────────────────────────────────
+# PyPI package name uses a hyphen; the import name is `khmernltk`.
+khmer-nltk>=1.6
+# If PyPI is unreachable, install from GitHub instead:
+#   pip install git+https://github.com/seanghay/khmer-nltk.git
 
-# Ordinal regression
-coral-pytorch>=1.4.0
-
-# XAI
-captum>=0.7.0
-
-# Khmer NLP
-khmernltk>=1.6
-
-# Data & viz
+# ── Data & viz ───────────────────────────────────────────────────
 pandas>=2.0.0
 numpy>=1.24.0
-matplotlib>=3.7.0
-Pillow>=10.0.0
-tqdm>=4.65.0
+matplotlib>=3.7.0       # used by xai.py for saliency PNGs
+Pillow>=10.0.0          # transitive dep of matplotlib
+tqdm>=4.65.0            # transitive dep of transformers / HF
+
+# ── Networking / SSL ─────────────────────────────────────────────
+certifi>=2024.0.0       # used by experiments/exp06_transformer.py for HF SSL fix
+requests>=2.31.0        # used by huggingface_hub
