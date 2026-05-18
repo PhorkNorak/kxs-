@@ -154,9 +154,11 @@ def tokenize_for_sft(rows, tokenizer, max_seq_length: int):
     for r in rows:
         prompt = format_prompt(r, include_score=False)
         full = format_prompt(r, include_score=True) + tokenizer.eos_token
-        enc_full = tokenizer(full, truncation=True, max_length=max_seq_length,
+        # Use text= keyword: Gemma4Processor / Qwen3.5VL are multimodal — their
+        # first positional argument is `images`, not text.
+        enc_full = tokenizer(text=full, truncation=True, max_length=max_seq_length,
                              add_special_tokens=False)
-        enc_prompt = tokenizer(prompt, truncation=True, max_length=max_seq_length,
+        enc_prompt = tokenizer(text=prompt, truncation=True, max_length=max_seq_length,
                                add_special_tokens=False)
         ids = enc_full["input_ids"]
         n_prompt = min(len(enc_prompt["input_ids"]), len(ids))
@@ -183,7 +185,8 @@ def collate_pad(features, pad_id: int):
 
 def generate_score(model, tokenizer, prompt: str, max_score: int, device):
     """Greedy-decode 5 tokens, regex-parse first integer, clip to [0, max_score]."""
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True,
+    # text= keyword required for multimodal processors (Gemma 4 / Qwen3.5VL).
+    inputs = tokenizer(text=prompt, return_tensors="pt", truncation=True,
                        max_length=tokenizer.model_max_length).to(device)
     with torch.no_grad():
         out = model.generate(
