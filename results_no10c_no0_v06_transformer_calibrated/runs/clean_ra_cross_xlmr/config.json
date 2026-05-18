@@ -1,0 +1,16 @@
+{
+  "run_id": "clean_ra_cross_xlmr",
+  "model": "cross_xlmr",
+  "family": "cross",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "clean",
+  "input": "ra",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.01,
+    0.43,
+    0.72,
+    0.875
+  ]
+}

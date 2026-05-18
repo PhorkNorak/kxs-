@@ -1,0 +1,16 @@
+{
+  "run_id": "raw_qar_cross_mbert",
+  "model": "cross_mbert",
+  "family": "cross",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "raw",
+  "input": "qar",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.16,
+    0.52,
+    0.5800000000000001,
+    0.86
+  ]
+}

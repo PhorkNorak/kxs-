@@ -1,0 +1,16 @@
+{
+  "run_id": "raw_qar_cross_gte_maxfeat",
+  "model": "cross_gte_maxfeat",
+  "family": "cross_maxfeat",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "raw",
+  "input": "qar",
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.125,
+    0.39,
+    0.68,
+    0.91
+  ]
+}

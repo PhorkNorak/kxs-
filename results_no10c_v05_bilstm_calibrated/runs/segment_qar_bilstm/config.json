@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_qar_bilstm",
+  "model": "bilstm",
+  "family": "bilstm",
+  "preprocess": "segment",
+  "input": "qar",
+  "vocab_size": 98,
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.125,
+    0.45,
+    0.61,
+    0.875
+  ]
+}

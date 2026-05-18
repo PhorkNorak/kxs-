@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_qar_cross_xlmr",
+  "model": "cross_xlmr",
+  "family": "cross",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "segment",
+  "input": "qar",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.27,
+    0.29000000000000004,
+    0.63,
+    0.79
+  ]
+}

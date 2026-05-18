@@ -1,0 +1,16 @@
+{
+  "run_id": "clean_ra_dual_xlmr_maxfeat",
+  "model": "dual_xlmr_maxfeat",
+  "family": "dual_maxfeat",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "clean",
+  "input": "ra",
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.25,
+    0.48000000000000004,
+    0.7100000000000001,
+    0.93
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "run_id": "clean_ra_cross_gte",
+  "model": "cross_gte",
+  "family": "cross",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "clean",
+  "input": "ra",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.17,
+    0.51,
+    0.56,
+    0.89
+  ]
+}

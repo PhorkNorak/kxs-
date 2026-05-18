@@ -1,0 +1,16 @@
+{
+  "run_id": "clean_qar_dual_xlmr",
+  "model": "dual_xlmr",
+  "family": "dual",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.08,
+    0.39,
+    0.61,
+    0.875
+  ]
+}

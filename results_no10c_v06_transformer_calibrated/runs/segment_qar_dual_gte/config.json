@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_qar_dual_gte",
+  "model": "dual_gte",
+  "family": "dual",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "segment",
+  "input": "qar",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.09,
+    0.375,
+    0.63,
+    0.91
+  ]
+}

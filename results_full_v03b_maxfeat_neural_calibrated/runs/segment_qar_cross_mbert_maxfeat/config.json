@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_qar_cross_mbert_maxfeat",
+  "model": "cross_mbert_maxfeat",
+  "family": "cross_maxfeat",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "segment",
+  "input": "qar",
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.49,
+    0.53,
+    0.63,
+    0.875
+  ]
+}

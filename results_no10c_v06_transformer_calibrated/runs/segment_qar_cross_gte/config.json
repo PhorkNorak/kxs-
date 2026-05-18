@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_qar_cross_gte",
+  "model": "cross_gte",
+  "family": "cross",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "segment",
+  "input": "qar",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.125,
+    0.36000000000000004,
+    0.54,
+    0.8
+  ]
+}

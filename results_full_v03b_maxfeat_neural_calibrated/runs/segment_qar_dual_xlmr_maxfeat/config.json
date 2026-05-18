@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_qar_dual_xlmr_maxfeat",
+  "model": "dual_xlmr_maxfeat",
+  "family": "dual_maxfeat",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "segment",
+  "input": "qar",
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.19,
+    0.41000000000000003,
+    0.55,
+    0.88
+  ]
+}

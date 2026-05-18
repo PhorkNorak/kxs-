@@ -1,0 +1,16 @@
+{
+  "run_id": "clean_qar_bilstm_maxfeat",
+  "model": "bilstm_maxfeat",
+  "family": "bilstm_maxfeat",
+  "preprocess": "clean",
+  "input": "qar",
+  "vocab_size": 99,
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.01,
+    0.44,
+    0.73,
+    0.8200000000000001
+  ]
+}

@@ -7,34 +7,34 @@
   "experiment": "v07_ensemble",
   "top_k": 3,
   "weights": [
-    0.3501941067697044,
-    0.3501941067697044,
-    0.29961178646059117
+    0.36982038381500193,
+    0.3280012563201086,
+    0.30217835986488933
   ],
   "calibrated_cuts": [
-    0.38,
-    0.46,
-    0.6,
-    0.79
+    0.21000000000000002,
+    0.375,
+    0.66,
+    0.9
   ],
   "chosen": [
     {
-      "experiment": "v01_baseline",
-      "run_id": "segment_qar_tfidf_svr",
-      "val_qwk": 0.6909,
-      "test_qwk": 0.7707
+      "experiment": "v06_transformer",
+      "run_id": "segment_ra_dual_gte",
+      "val_qwk": 0.7859,
+      "test_qwk": 0.7703
     },
     {
-      "experiment": "v03_maxfeat",
-      "run_id": "segment_qar_tfidf_svr_maxfeat",
-      "val_qwk": 0.6909,
-      "test_qwk": 0.7707
+      "experiment": "v06_transformer",
+      "run_id": "clean_ra_dual_gte",
+      "val_qwk": 0.7799,
+      "test_qwk": 0.7824
     },
     {
-      "experiment": "v04_bucket",
-      "run_id": "segment_ra_tfidf_svr_bucket",
-      "val_qwk": 0.6831,
-      "test_qwk": 0.7729
+      "experiment": "v03b_maxfeat_neural",
+      "run_id": "raw_qar_dual_gte_maxfeat",
+      "val_qwk": 0.7758,
+      "test_qwk": 0.7838
     }
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_ra_dual_mbert",
+  "model": "dual_mbert",
+  "family": "dual",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "segment",
+  "input": "ra",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.25,
+    0.3,
+    0.63,
+    0.72
+  ]
+}

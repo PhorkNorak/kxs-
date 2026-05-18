@@ -1,0 +1,16 @@
+{
+  "run_id": "raw_ra_cross_mbert_maxfeat",
+  "model": "cross_mbert_maxfeat",
+  "family": "cross_maxfeat",
+  "backbone": "bert-base-multilingual-cased",
+  "preprocess": "raw",
+  "input": "ra",
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.125,
+    0.54,
+    0.5800000000000001,
+    0.8400000000000001
+  ]
+}

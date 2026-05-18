@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_ra_dual_gte_maxfeat",
+  "model": "dual_gte_maxfeat",
+  "family": "dual_maxfeat",
+  "backbone": "Alibaba-NLP/gte-multilingual-base",
+  "preprocess": "segment",
+  "input": "ra",
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.12,
+    0.3,
+    0.56,
+    0.77
+  ]
+}

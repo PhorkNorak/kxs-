@@ -1,0 +1,16 @@
+{
+  "run_id": "segment_qar_dual_xlmr",
+  "model": "dual_xlmr",
+  "family": "dual",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "segment",
+  "input": "qar",
+  "max_feat": false,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.125,
+    0.38,
+    0.64,
+    0.93
+  ]
+}

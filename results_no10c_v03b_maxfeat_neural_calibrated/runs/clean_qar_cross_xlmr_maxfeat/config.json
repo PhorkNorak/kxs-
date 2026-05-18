@@ -1,0 +1,16 @@
+{
+  "run_id": "clean_qar_cross_xlmr_maxfeat",
+  "model": "cross_xlmr_maxfeat",
+  "family": "cross_maxfeat",
+  "backbone": "xlm-roberta-base",
+  "preprocess": "clean",
+  "input": "qar",
+  "max_feat": true,
+  "experiment": "v02_threshold_calibration",
+  "calibrated_cuts": [
+    0.01,
+    0.4,
+    0.5800000000000001,
+    0.88
+  ]
+}
