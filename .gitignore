@@ -8,10 +8,14 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-# Model checkpoints & outputs
+# Model checkpoints & outputs (regenerable from training code)
 outputs/
 *.pt
 *.pth
+*.safetensors
+*.bin
+**/lora_adapter/
+**/checkpoints/
 
 # Jupyter
 .ipynb_checkpoints/
