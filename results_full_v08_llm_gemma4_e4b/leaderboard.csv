@@ -1,0 +1,2 @@
+run_id,preprocess,input,model,family,train_qwk,train_accuracy,train_adjacent_accuracy,train_mae,train_raw_exact,train_raw_within1,train_raw_mae,train_pct_mae,test_qwk,test_accuracy,test_adjacent_accuracy,test_mae,test_raw_exact,test_raw_within1,test_raw_mae,test_pct_mae,val_qwk,best_epoch,seconds
+clean_qar_gemma4_e4b,clean,qar,gemma4_e4b,llm,-0.0200,0.3841,0.5857,1.1812,0.3116,0.3998,3.4360,29.4608,0.0035,0.3876,0.5899,1.1629,0.3427,0.4157,3.4663,28.7921,-0.0271,7,5168.7

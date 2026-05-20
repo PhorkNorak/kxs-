@@ -1,0 +1,14 @@
+{
+  "run_id": "clean_qar_gemma4_e4b",
+  "model": "gemma4_e4b",
+  "family": "llm",
+  "experiment": "v08_llm",
+  "backbone": "google/gemma-4-E4B",
+  "preprocess": "clean",
+  "input": "qar",
+  "epochs": 7,
+  "batch_size": 4,
+  "lr": 0.0002,
+  "loader_path": "unsloth",
+  "max_seq_length": 1024
+}

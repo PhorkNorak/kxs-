@@ -1,0 +1,2 @@
+run_id,preprocess,input,model,family,train_qwk,train_accuracy,train_adjacent_accuracy,train_mae,train_raw_exact,train_raw_within1,train_raw_mae,train_pct_mae,test_qwk,test_accuracy,test_adjacent_accuracy,test_mae,test_raw_exact,test_raw_within1,test_raw_mae,test_pct_mae,val_qwk,best_epoch,seconds
+clean_qar_qwen35_4b,clean,qar,qwen35_4b,llm,0.9190,0.8722,0.9760,0.1534,0.7668,0.8898,0.5735,4.2412,0.8101,0.7778,0.9333,0.3037,0.5926,0.8074,1.0519,7.9136,0.8172,7,13619.3

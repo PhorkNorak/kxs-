@@ -8,14 +8,10 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-# Model checkpoints & outputs (regenerable from training code)
+# Model checkpoints & outputs
 outputs/
 *.pt
 *.pth
-*.safetensors
-*.bin
-**/lora_adapter/
-**/checkpoints/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -27,3 +23,12 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Large model artifacts — regenerable from training
+*.safetensors
+*.bin
+**/lora_adapter/
+**/checkpoints/
+
+# Auto-generated unsloth build cache
+unsloth_compiled_cache/
